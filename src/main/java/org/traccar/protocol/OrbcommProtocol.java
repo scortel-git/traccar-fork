@@ -24,6 +24,10 @@ import org.traccar.TrackerClient;
 import org.traccar.config.Config;
 
 import jakarta.inject.Inject;
+import org.traccar.database.NotificationManager;
+import org.traccar.handler.events.PriorNotificationEventHandler;
+import org.traccar.session.cache.CacheManager;
+import org.traccar.storage.Storage;
 
 public class OrbcommProtocol extends BaseProtocol {
 
@@ -34,7 +38,7 @@ public class OrbcommProtocol extends BaseProtocol {
             protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
                 pipeline.addLast(new HttpRequestEncoder());
                 pipeline.addLast(new HttpResponseDecoder());
-                pipeline.addLast(new HttpObjectAggregator(65535));
+                pipeline.addLast(new HttpObjectAggregator(2147483647));
                 pipeline.addLast(new OrbcommProtocolDecoder(OrbcommProtocol.this));
                 pipeline.addLast(new OrbcommProtocolPoller(OrbcommProtocol.this, config));
             }

@@ -17,10 +17,7 @@
 package org.traccar.notificators;
 
 import org.traccar.database.StatisticsManager;
-import org.traccar.model.Event;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.notification.MessageException;
 import org.traccar.notification.NotificationFormatter;
 import org.traccar.sms.SmsManager;
@@ -42,7 +39,10 @@ public class NotificatorSms implements Notificator {
         this.notificationFormatter = notificationFormatter;
         this.statisticsManager = statisticsManager;
     }
+    @Override
+    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
 
+    }
     @Override
     public void send(Notification notification, User user, Event event, Position position) throws MessageException {
         if (user.getPhone() != null) {

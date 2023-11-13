@@ -19,10 +19,7 @@ package org.traccar.notificators;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
-import org.traccar.model.Event;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.notification.NotificationFormatter;
 
 import jakarta.inject.Inject;
@@ -84,7 +81,10 @@ public class NotificatorTelegram implements Notificator {
         locationMessage.accuracy = position.getAccuracy();
         return locationMessage;
     }
+    @Override
+    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
 
+    }
     @Override
     public void send(Notification notification, User user, Event event, Position position) {
         var shortMessage = notificationFormatter.formatMessage(user, event, position, "short");

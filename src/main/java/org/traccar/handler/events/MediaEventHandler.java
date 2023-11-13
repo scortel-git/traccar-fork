@@ -21,6 +21,8 @@ import org.traccar.model.Position;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.traccar.model.PriorNotification;
+
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -44,6 +46,10 @@ public class MediaEventHandler extends BaseEventHandler {
                     return event;
                 })
                 .collect(Collectors.toMap(event -> event, event -> position));
+    }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
+        return null;
     }
 
 }

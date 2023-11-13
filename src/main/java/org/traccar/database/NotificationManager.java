@@ -23,13 +23,7 @@ import org.traccar.config.Keys;
 import org.traccar.forward.EventData;
 import org.traccar.forward.EventForwarder;
 import org.traccar.geocoder.Geocoder;
-import org.traccar.model.Calendar;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Geofence;
-import org.traccar.model.Maintenance;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
+import org.traccar.model.*;
 import org.traccar.notification.MessageException;
 import org.traccar.notification.NotificatorManager;
 import org.traccar.session.cache.CacheManager;
@@ -118,12 +112,78 @@ public class NotificationManager {
 
         forwardEvent(event, position);
     }
+    private void updatePriorEvent(Event event, PriorNotification priorNotification) {
+        try {
+            event.setId(storage.addObject(event, new Request(new Columns.Exclude("id"))));
+        } catch (StorageException error) {
+            LOGGER.warn("Event save error", error);
+        }
+
+        var notifications = cacheManager.getDeviceObjects(event.getDeviceId(), Notification.class).stream()
+                .filter(notification -> notification.getType().equals(event.getType()))
+                .filter(notification -> {
+                    if (event.getType().equals(Event.TYPE_ALARM)) {
+                        String alarmsAttribute = notification.getString("alarms");
+                        if (alarmsAttribute != null) {
+                            return Arrays.asList(alarmsAttribute.split(","))
+                                    .contains(event.getString(Position.KEY_ALARM));
+                        }
+                        return false;
+                    }
+                    return true;
+                })
+                .filter(notification -> {
+                    long calendarId = notification.getCalendarId();
+                    Calendar calendar = calendarId != 0 ? cacheManager.getObject(Calendar.class, calendarId) : null;
+                    return calendar == null || calendar.checkMoment(event.getEventTime());
+                })
+                .collect(Collectors.toUnmodifiableList());
+
+        if (!notifications.isEmpty()) {
+            if (priorNotification != null && priorNotification.getAddress() == null && geocodeOnRequest && geocoder != null) {
+                priorNotification.setAddress(geocoder.getAddress(priorNotification.getLatitude(), priorNotification.getLongitude(), null));
+            }
+
+            notifications.forEach(notification -> {
+                cacheManager.getNotificationUsers(notification.getId(), event.getDeviceId()).forEach(user -> {
+                    for (String notificator : notification.getNotificatorsTypes()) {
+                        try {
+                            notificatorManager.getNotificator(notificator).sendPrior(notification, user, event, priorNotification);
+                        } catch (MessageException exception) {
+                            LOGGER.warn("Notification failed", exception);
+                        }
+                    }
+                });
+            });
+        }
+
+        forwardEventPrior(event, priorNotification);
+    }
 
     private void forwardEvent(Event event, Position position) {
         if (eventForwarder != null) {
             EventData eventData = new EventData();
             eventData.setEvent(event);
             eventData.setPosition(position);
+            eventData.setDevice(cacheManager.getObject(Device.class, event.getDeviceId()));
+            if (event.getGeofenceId() != 0) {
+                eventData.setGeofence(cacheManager.getObject(Geofence.class, event.getGeofenceId()));
+            }
+            if (event.getMaintenanceId() != 0) {
+                eventData.setMaintenance(cacheManager.getObject(Maintenance.class, event.getMaintenanceId()));
+            }
+            eventForwarder.forward(eventData, (success, throwable) -> {
+                if (!success) {
+                    LOGGER.warn("Event forwarding failed", throwable);
+                }
+            });
+        }
+    }
+    private void forwardEventPrior(Event event, PriorNotification priorNotification) {
+        if (eventForwarder != null) {
+            EventData eventData = new EventData();
+            eventData.setEvent(event);
+            eventData.setPriorNotification(priorNotification);
             eventData.setDevice(cacheManager.getObject(Device.class, event.getDeviceId()));
             if (event.getGeofenceId() != 0) {
                 eventData.setGeofence(cacheManager.getObject(Geofence.class, event.getGeofenceId()));
@@ -146,6 +206,20 @@ public class NotificationManager {
             try {
                 cacheManager.addDevice(event.getDeviceId());
                 updateEvent(event, position);
+            } catch (StorageException e) {
+                throw new RuntimeException(e);
+            } finally {
+                cacheManager.removeDevice(event.getDeviceId());
+            }
+        }
+    }
+    public void updatePriorEvents(Map<Event, PriorNotification> events) {
+        for (Entry<Event, PriorNotification> entry : events.entrySet()) {
+            Event event = entry.getKey();
+            PriorNotification priorNotification = entry.getValue();
+            try {
+                cacheManager.addDevice(event.getDeviceId());
+                updatePriorEvent(event, priorNotification);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             } finally {

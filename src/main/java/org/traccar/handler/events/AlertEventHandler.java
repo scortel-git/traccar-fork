@@ -23,6 +23,7 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -58,6 +59,10 @@ public class AlertEventHandler extends BaseEventHandler {
                 return Collections.singletonMap(event, position);
             }
         }
+        return null;
+    }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
         return null;
     }
 

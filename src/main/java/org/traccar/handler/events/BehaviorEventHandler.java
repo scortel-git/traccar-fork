@@ -21,6 +21,7 @@ import org.traccar.config.Keys;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -63,5 +64,11 @@ public class BehaviorEventHandler extends BaseEventHandler {
         }
         return null;
     }
+
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
+        return null;
+    }
+
 
 }

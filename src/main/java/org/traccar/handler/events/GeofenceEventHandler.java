@@ -17,10 +17,7 @@ package org.traccar.handler.events;
 
 import io.netty.channel.ChannelHandler;
 import org.traccar.helper.model.PositionUtil;
-import org.traccar.model.Calendar;
-import org.traccar.model.Event;
-import org.traccar.model.Geofence;
-import org.traccar.model.Position;
+import org.traccar.model.*;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -84,5 +81,10 @@ public class GeofenceEventHandler extends BaseEventHandler {
         }
         return events;
     }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
+        return null;
+    }
+
 
 }

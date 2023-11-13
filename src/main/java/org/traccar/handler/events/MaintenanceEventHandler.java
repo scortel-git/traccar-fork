@@ -23,6 +23,7 @@ import io.netty.channel.ChannelHandler;
 import org.traccar.model.Event;
 import org.traccar.model.Maintenance;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -65,6 +66,10 @@ public class MaintenanceEventHandler extends BaseEventHandler {
         }
 
         return events;
+    }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
+        return null;
     }
 
 }

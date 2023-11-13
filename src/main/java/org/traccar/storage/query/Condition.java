@@ -207,5 +207,20 @@ public interface Condition {
             return deviceId;
         }
     }
+    class LatestPriorNotifications implements Condition {
+        private final long deviceId;
+
+        public LatestPriorNotifications(long deviceId) {
+            this.deviceId = deviceId;
+        }
+
+        public LatestPriorNotifications() {
+            this(0);
+        }
+
+        public long getDeviceId() {
+            return deviceId;
+        }
+    }
 
 }

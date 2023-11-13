@@ -20,20 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.traccar.broadcast.BroadcastInterface;
 import org.traccar.broadcast.BroadcastService;
 import org.traccar.config.Config;
-import org.traccar.model.Attribute;
-import org.traccar.model.BaseModel;
-import org.traccar.model.Calendar;
-import org.traccar.model.Device;
-import org.traccar.model.Driver;
-import org.traccar.model.Geofence;
-import org.traccar.model.Group;
-import org.traccar.model.GroupedModel;
-import org.traccar.model.Maintenance;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.Schedulable;
-import org.traccar.model.Server;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
@@ -75,6 +62,7 @@ public class CacheManager implements BroadcastInterface {
     private final Map<Long, Integer> deviceReferences = new HashMap<>();
     private final Map<Long, Map<Class<? extends BaseModel>, Set<Long>>> deviceLinks = new HashMap<>();
     private final Map<Long, Position> devicePositions = new HashMap<>();
+    private final Map<Long, PriorNotification> devicePriorNotifications = new HashMap<>();
 
     private Server server;
     private final Map<Long, List<User>> notificationUsers = new HashMap<>();
@@ -128,6 +116,15 @@ public class CacheManager implements BroadcastInterface {
         try {
             lock.readLock().lock();
             return devicePositions.get(deviceId);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    public PriorNotification getPriorNotification(long deviceId) {
+        try {
+            lock.readLock().lock();
+            return devicePriorNotifications.get(deviceId);
         } finally {
             lock.readLock().unlock();
         }
@@ -201,6 +198,18 @@ public class CacheManager implements BroadcastInterface {
             lock.writeLock().lock();
             if (deviceLinks.containsKey(position.getDeviceId())) {
                 devicePositions.put(position.getDeviceId(), position);
+            }
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void updatePriorNotification(PriorNotification priorNotification) {
+        try {
+            lock.writeLock().lock();
+            if (deviceLinks.containsKey(priorNotification.getDeviceId())) {
+                devicePriorNotifications.put(priorNotification.getDeviceId(), priorNotification);
+                broadcastService.updatePriorNotification(true, priorNotification);
             }
         } finally {
             lock.writeLock().unlock();

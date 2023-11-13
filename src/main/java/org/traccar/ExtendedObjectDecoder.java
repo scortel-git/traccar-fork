@@ -28,6 +28,8 @@ import org.traccar.helper.DataConverter;
 import org.traccar.model.Position;
 
 import jakarta.inject.Inject;
+import org.traccar.model.PriorNotification;
+
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -61,6 +63,15 @@ public abstract class ExtendedObjectDecoder extends ChannelInboundHandlerAdapter
                 position.set(Position.KEY_ORIGINAL, ByteBufUtil.hexDump(buf, 0, buf.writerIndex()));
             } else if (originalMessage instanceof String) {
                 position.set(Position.KEY_ORIGINAL, DataConverter.printHex(
+                        ((String) originalMessage).getBytes(StandardCharsets.US_ASCII)));
+            }
+        } else if (getConfig().getBoolean(Keys.DATABASE_SAVE_ORIGINAL) && decodedMessage instanceof PriorNotification) {
+            PriorNotification priorNotification = (PriorNotification) decodedMessage;
+            if (originalMessage instanceof ByteBuf) {
+                ByteBuf buf = (ByteBuf) originalMessage;
+                priorNotification.set(PriorNotification.KEY_ORIGINAL, ByteBufUtil.hexDump(buf, 0, buf.writerIndex()));
+            } else if (originalMessage instanceof String) {
+                priorNotification.set(PriorNotification.KEY_ORIGINAL, DataConverter.printHex(
                         ((String) originalMessage).getBytes(StandardCharsets.US_ASCII)));
             }
         }

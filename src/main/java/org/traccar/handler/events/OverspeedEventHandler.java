@@ -23,10 +23,7 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
 import org.traccar.helper.model.PositionUtil;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Geofence;
-import org.traccar.model.Position;
+import org.traccar.model.*;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.session.state.OverspeedProcessor;
 import org.traccar.session.state.OverspeedState;
@@ -122,5 +119,10 @@ public class OverspeedEventHandler extends BaseEventHandler {
         }
         return state.getEvent() != null ? Collections.singletonMap(state.getEvent(), position) : null;
     }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
+        return null;
+    }
+
 
 }

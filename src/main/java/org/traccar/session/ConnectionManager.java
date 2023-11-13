@@ -27,11 +27,12 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.database.DeviceLookupService;
 import org.traccar.database.NotificationManager;
-import org.traccar.model.BaseModel;
 import org.traccar.model.Device;
-import org.traccar.model.Event;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
+import org.traccar.model.Event;
 import org.traccar.model.User;
+import org.traccar.model.BaseModel;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
@@ -314,6 +315,19 @@ public class ConnectionManager implements BroadcastInterface {
         }
     }
 
+    public synchronized void updatePriorNotification(boolean local, PriorNotification priorNotification) {
+        if (local) {
+            broadcastService.updatePriorNotification(true, priorNotification);
+        }
+        for (long userId : deviceUsers.getOrDefault(priorNotification.getDeviceId(), Collections.emptySet())) {
+            if (listeners.containsKey(userId)) {
+                for (UpdateListener listener : listeners.get(userId)) {
+                    listener.onUpdatePriorNotification(priorNotification);
+                }
+            }
+        }
+    }
+
     @Override
     public synchronized void updateEvent(boolean local, long userId, Event event) {
         if (local) {
@@ -343,6 +357,7 @@ public class ConnectionManager implements BroadcastInterface {
         void onKeepalive();
         void onUpdateDevice(Device device);
         void onUpdatePosition(Position position);
+        void onUpdatePriorNotification(PriorNotification priorNotification);
         void onUpdateEvent(Event event);
     }
 

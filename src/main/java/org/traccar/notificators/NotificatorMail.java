@@ -17,10 +17,7 @@
 package org.traccar.notificators;
 
 import org.traccar.mail.MailManager;
-import org.traccar.model.Event;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.notification.MessageException;
 import org.traccar.notification.NotificationFormatter;
 
@@ -39,7 +36,10 @@ public class NotificatorMail implements Notificator {
         this.mailManager = mailManager;
         this.notificationFormatter = notificationFormatter;
     }
+    @Override
+    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
 
+    }
     @Override
     public void send(Notification notification, User user, Event event, Position position) throws MessageException {
         try {

@@ -16,14 +16,12 @@
  */
 package org.traccar.notificators;
 
-import org.traccar.model.Event;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.notification.MessageException;
 
 public interface Notificator {
 
     void send(Notification notification, User user, Event event, Position position) throws MessageException;
+    void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) throws MessageException;
 
 }
