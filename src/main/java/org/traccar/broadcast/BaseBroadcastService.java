@@ -19,11 +19,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.traccar.model.BaseModel;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Permission;
-import org.traccar.model.Position;
+import org.traccar.model.*;
 
 public abstract class BaseBroadcastService implements BroadcastService {
 
@@ -50,6 +46,12 @@ public abstract class BaseBroadcastService implements BroadcastService {
     public void updatePosition(boolean local, Position position) {
         BroadcastMessage message = new BroadcastMessage();
         message.setPosition(position);
+        sendMessage(message);
+    }
+    @Override
+    public void updatePriorNotification(boolean local, PriorNotification priorNotification) {
+        BroadcastMessage message = new BroadcastMessage();
+        message.setPriorNotification(priorNotification);
         sendMessage(message);
     }
 
@@ -96,6 +98,8 @@ public abstract class BaseBroadcastService implements BroadcastService {
             listeners.forEach(listener -> listener.updateEvent(false, message.getUserId(), message.getEvent()));
         } else if (message.getCommandDeviceId() != null) {
             listeners.forEach(listener -> listener.updateCommand(false, message.getCommandDeviceId()));
+        } else if (message.getPriorNotification() != null) {
+                listeners.forEach(listener -> listener.updatePriorNotification(false, message.getPriorNotification()));
         } else if (message.getChanges() != null) {
             var iterator = message.getChanges().entrySet().iterator();
             if (iterator.hasNext()) {

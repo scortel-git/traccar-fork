@@ -18,6 +18,7 @@ package org.traccar.broadcast;
 import org.traccar.model.Device;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
 
 import java.util.Map;
 
@@ -42,6 +43,17 @@ public class BroadcastMessage {
     public void setPosition(Position position) {
         this.position = position;
     }
+
+    private PriorNotification priorNotification;
+
+    public PriorNotification getPriorNotification() {
+        return priorNotification;
+    }
+
+    public void setPriorNotification(PriorNotification priorNotification) {
+        this.priorNotification = priorNotification;
+    }
+
 
     private Long userId;
 

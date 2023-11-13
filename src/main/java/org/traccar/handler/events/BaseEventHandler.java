@@ -23,6 +23,7 @@ import org.traccar.model.Event;
 import org.traccar.model.Position;
 
 import jakarta.inject.Inject;
+import org.traccar.model.PriorNotification;
 
 public abstract class BaseEventHandler extends BaseDataHandler {
 
@@ -42,6 +43,15 @@ public abstract class BaseEventHandler extends BaseDataHandler {
         return position;
     }
 
+    protected PriorNotification handlePosition(PriorNotification priorNotification) {
+        Map<Event, PriorNotification> events = analyzePriorNotification(priorNotification);
+        if (events != null && !events.isEmpty()) {
+            notificationManager.updatePriorEvents(events);
+        }
+        return priorNotification;
+    }
+
     protected abstract Map<Event, Position> analyzePosition(Position position);
+    protected abstract Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification);
 
 }

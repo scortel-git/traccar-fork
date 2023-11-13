@@ -20,25 +20,30 @@ import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
+import jakarta.inject.Inject;
 import org.traccar.BaseHttpProtocolDecoder;
+import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
 import org.traccar.Protocol;
 import org.traccar.helper.DateUtil;
-import org.traccar.model.CellTower;
-import org.traccar.model.Command;
-import org.traccar.model.Network;
-import org.traccar.model.Position;
-import org.traccar.model.WifiAccessPoint;
+import org.traccar.storage.Storage;
+import org.traccar.storage.StorageException;
+import org.traccar.storage.query.Columns;
+import org.traccar.storage.query.Condition;
+import org.traccar.storage.query.Order;
+import org.traccar.storage.query.Request;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class OsmAndProtocolDecoder extends BaseHttpProtocolDecoder {
+
+    @Inject
+    protected  Storage storage;
 
     public OsmAndProtocolDecoder(Protocol protocol) {
         super(protocol);
@@ -55,6 +60,21 @@ public class OsmAndProtocolDecoder extends BaseHttpProtocolDecoder {
             params = decoder.parameters();
         }
 
+        Optional<Date> lastServerTimeProtocolObject = storage.getObjects(PriorNotification.class,
+                new Request(new Columns.All(),
+                        new Condition.Equals("protocol", getProtocolName()),
+                        new Order("servertime", true, 1)
+                )
+        ).stream()
+         .findFirst()
+         .map(PriorNotification::getServerTime);
+
+        String dateUTC = DateUtil.zonedDateToUTC(lastServerTimeProtocolObject
+                .map(date1 -> Date.from(date1.toInstant()))
+                .orElseGet(Date::new),
+                true);
+
+//        Position position = new Position("orbcomm");
         Position position = new Position(getProtocolName());
         position.setValid(true);
 
@@ -192,13 +212,35 @@ public class OsmAndProtocolDecoder extends BaseHttpProtocolDecoder {
             } else {
                 sendResponse(channel, HttpResponseStatus.OK);
             }
+//            position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
+
+            try {
+                addPrior(position);
+            } catch (StorageException e) {
+                throw new RuntimeException(e);
+            }
+
             return position;
         } else {
             sendResponse(channel, HttpResponseStatus.BAD_REQUEST);
             return null;
         }
     }
+    protected void addPrior(Position position) throws StorageException {
+        PriorNotification priorNotification = new PriorNotification();
+        priorNotification.setProtocol(position.getProtocol());
+        priorNotification.setDeviceId(position.getDeviceId());
+        priorNotification.setAltitude(position.getAltitude());
+        priorNotification.setCourse(position.getCourse());
+        priorNotification.setTime(position.getDeviceTime());
+        priorNotification.setValid(position.getValid());
+        priorNotification.setOutdated(position.getOutdated());
+        priorNotification.set("posId", position.getId());
+        position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
+        position.setPriorNotification(priorNotification);
 
+        priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
+    }
     @Override
     protected void sendQueuedCommands(Channel channel, SocketAddress remoteAddress, long deviceId) {
     }

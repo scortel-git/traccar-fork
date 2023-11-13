@@ -118,6 +118,7 @@ public class MainModule extends AbstractModule {
     }
 
     @Singleton
+
     @Provides
     public static Storage provideStorage(Injector injector, Config config) {
         if (config.getBoolean(Keys.DATABASE_MEMORY)) {

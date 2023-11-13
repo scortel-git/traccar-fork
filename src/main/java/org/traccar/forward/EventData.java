@@ -16,11 +16,7 @@
 package org.traccar.forward;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Geofence;
-import org.traccar.model.Maintenance;
-import org.traccar.model.Position;
+import org.traccar.model.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventData {
@@ -44,6 +40,16 @@ public class EventData {
     public void setPosition(Position position) {
         this.position = position;
     }
+    private PriorNotification priorNotification;
+
+    public PriorNotification getPriorNotification() {
+        return priorNotification;
+    }
+
+    public void setPriorNotification(PriorNotification priorNotification) {
+        this.priorNotification = priorNotification;
+    }
+
 
     private Device device;
 

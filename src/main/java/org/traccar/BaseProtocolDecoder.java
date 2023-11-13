@@ -26,6 +26,7 @@ import org.traccar.helper.model.AttributeUtil;
 import org.traccar.model.Command;
 import org.traccar.model.Device;
 import org.traccar.model.Position;
+import org.traccar.model.PriorNotification;
 import org.traccar.session.ConnectionManager;
 import org.traccar.session.DeviceSession;
 import org.traccar.session.cache.CacheManager;
@@ -166,6 +167,31 @@ public abstract class BaseProtocolDecoder extends ExtendedObjectDecoder {
             }
         }
     }
+    public void getLastPriorNotification(PriorNotification priorNotification, Date deviceTime) {
+        if (priorNotification.getDeviceId() != 0) {
+            priorNotification.setOutdated(true);
+
+            PriorNotification last = cacheManager.getPriorNotification(priorNotification.getDeviceId());
+            if (last != null) {
+                priorNotification.setFixTime(last.getFixTime());
+                priorNotification.setValid(last.getValid());
+                priorNotification.setLatitude(last.getLatitude());
+                priorNotification.setLongitude(last.getLongitude());
+                priorNotification.setAltitude(last.getAltitude());
+                priorNotification.setSpeed(last.getSpeed());
+                priorNotification.setCourse(last.getCourse());
+                priorNotification.setAccuracy(last.getAccuracy());
+            } else {
+                priorNotification.setFixTime(new Date(0));
+            }
+
+            if (deviceTime != null) {
+                priorNotification.setDeviceTime(deviceTime);
+            } else {
+                priorNotification.setDeviceTime(new Date());
+            }
+        }
+    }
 
     @Override
     protected void onMessageEvent(
@@ -177,7 +203,11 @@ public abstract class BaseProtocolDecoder extends ExtendedObjectDecoder {
         if (decodedMessage != null) {
             if (decodedMessage instanceof Position) {
                 deviceIds.add(((Position) decodedMessage).getDeviceId());
-            } else if (decodedMessage instanceof Collection) {
+            }
+            else if (decodedMessage instanceof PriorNotification) {
+                deviceIds.add(((PriorNotification) decodedMessage).getDeviceId());
+            }
+            else if (decodedMessage instanceof Collection) {
                 Collection<Position> positions = (Collection) decodedMessage;
                 for (Position position : positions) {
                     deviceIds.add(position.getDeviceId());
@@ -206,6 +236,7 @@ public abstract class BaseProtocolDecoder extends ExtendedObjectDecoder {
     protected Object handleEmptyMessage(Channel channel, SocketAddress remoteAddress, Object msg) {
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress);
         if (getConfig().getBoolean(Keys.DATABASE_SAVE_EMPTY) && deviceSession != null) {
+
             Position position = new Position(getProtocolName());
             position.setDeviceId(deviceSession.getDeviceId());
             getLastLocation(position, null);

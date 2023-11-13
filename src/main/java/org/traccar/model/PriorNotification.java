@@ -15,21 +15,20 @@
  */
 package org.traccar.model;
 
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
-@StorageName("tc_positions")
-public class Position extends Message {
+import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@StorageName("tc_prior_notification")
+public class PriorNotification extends Message {
 
     public static final String KEY_ORIGINAL = "raw";
     public static final String KEY_INDEX = "index";
     public static final String KEY_HDOP = "hdop";
-    public static final String KEY_PRIOR_NOTIFICATION = "prior";
     public static final String KEY_VDOP = "vdop";
     public static final String KEY_PDOP = "pdop";
     public static final String KEY_SATELLITES = "sat"; // in use
@@ -151,10 +150,10 @@ public class Position extends Message {
     public static final String ALARM_TAMPERING = "tampering";
     public static final String ALARM_REMOVING = "removing";
 
-    public Position() {
+    public PriorNotification() {
     }
 
-    public Position(String protocol) {
+    public PriorNotification(String protocol) {
         this.protocol = protocol;
     }
 
@@ -310,17 +309,6 @@ public class Position extends Message {
 
     public void setNetwork(Network network) {
         this.network = network;
-    }
-
-
-    private PriorNotification priorNotification;
-
-    @JsonIgnore
-    @QueryIgnore
-    public PriorNotification getPriorNotification() {return priorNotification;}
-
-    public void setPriorNotification(PriorNotification priorNotification) {
-        this.priorNotification = priorNotification;
     }
 
     private List<Long> geofenceIds;

@@ -6,10 +6,10 @@
 
     <entry key='config.default'>./setup/default.xml</entry>
 
-    <entry key='web.path'>./traccar-web/web</entry>
+    <entry key='web.path'>./traccar-web/modern/build</entry>
     <entry key='web.debug'>true</entry>
     <entry key='web.console'>true</entry>
-
+    <entry key="server.instantAcknowledgement">true</entry>
     <entry key='geocoder.type'>test</entry>
 
     <entry key='media.path'>./target/media</entry>
@@ -20,9 +20,15 @@
     <entry key='mail.debug'>true</entry>
 
     <entry key='database.driver'>org.h2.Driver</entry>
-    <entry key='database.url'>jdbc:h2:./target/database</entry>
+    <entry key='database.url'>jdbc:h2:./target/database_prior;AUTO_SERVER=TRUE</entry>
     <entry key='database.user'>sa</entry>
     <entry key='database.password'></entry>
+
+<!--    <entry key='database.driver'>org.postgresql.Driver</entry>-->
+<!--    <entry key='database.url'>jdbc:postgresql://localhost:5432/tc_prior_notification</entry>-->
+<!--    <entry key='database.user'>traccar50</entry>-->
+<!--    <entry key='database.password'>traccar50_pass</entry>-->
+<!--    <entry key='database.saveOriginal'>true</entry>-->
 
     <entry key='atrack.custom'>true</entry>
     <entry key='intellitrac.port'>6037</entry>

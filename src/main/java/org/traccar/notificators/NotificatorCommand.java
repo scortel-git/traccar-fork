@@ -16,11 +16,7 @@
 package org.traccar.notificators;
 
 import org.traccar.database.CommandsManager;
-import org.traccar.model.Command;
-import org.traccar.model.Event;
-import org.traccar.model.Notification;
-import org.traccar.model.Position;
-import org.traccar.model.User;
+import org.traccar.model.*;
 import org.traccar.notification.MessageException;
 import org.traccar.storage.Storage;
 import org.traccar.storage.query.Columns;
@@ -40,6 +36,11 @@ public class NotificatorCommand implements Notificator {
     public NotificatorCommand(Storage storage, CommandsManager commandsManager) {
         this.storage = storage;
         this.commandsManager = commandsManager;
+    }
+
+    @Override
+    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
+
     }
 
     @Override

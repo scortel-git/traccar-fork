@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+  logicalFilePath="changelog-5.9.1">
+
+  <changeSet author="author" id="changelog-5.9.1">
+    <createTable tableName="tc_prior_notification">
+      <column name="id" type="INT" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="protocol" type="VARCHAR(128)" />
+      <column name="deviceid" type="INT">
+        <constraints nullable="false" />
+      </column>
+      <column name="servertime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="devicetime" type="TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="fixtime" type="TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="valid" type="BOOLEAN">
+        <constraints nullable="false" />
+      </column>
+      <column name="latitude" type="DOUBLE">
+        <constraints nullable="false" />
+      </column>
+      <column name="longitude" type="DOUBLE">
+        <constraints nullable="false" />
+      </column>
+      <column name="altitude" type="FLOAT">
+        <constraints nullable="false" />
+      </column>
+      <column name="speed" type="FLOAT">
+        <constraints nullable="false" />
+      </column>
+      <column name="course" type="FLOAT">
+        <constraints nullable="false" />
+      </column>
+      <column name="address" type="VARCHAR(512)" />
+      <column name="attributes" type="VARCHAR(21844)" />
+      <column name="accuracy" type="DOUBLE" defaultValueNumeric="0">
+        <constraints nullable="false" />
+      </column>
+      <column name="network" type="VARCHAR(4000)" />
+      <column name="geofenceids" type="VARCHAR(128)" />
+    </createTable>
+    <addForeignKeyConstraint baseTableName="tc_prior_notification" baseColumnNames="deviceid" constraintName="fk_tc_prior_notification_deviceid" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="tc_devices" />
+
+  </changeSet>
+
+</databaseChangeLog>

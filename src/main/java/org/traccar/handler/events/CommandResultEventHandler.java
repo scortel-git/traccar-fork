@@ -24,6 +24,7 @@ import org.traccar.model.Position;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import org.traccar.model.PriorNotification;
 
 @Singleton
 @ChannelHandler.Sharable
@@ -41,6 +42,10 @@ public class CommandResultEventHandler extends BaseEventHandler {
             event.set(Position.KEY_RESULT, (String) commandResult);
             return Collections.singletonMap(event, position);
         }
+        return null;
+    }
+    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+
         return null;
     }
 

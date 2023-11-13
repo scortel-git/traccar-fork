@@ -21,6 +21,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 public final class DateUtil {
 
@@ -70,6 +71,14 @@ public final class DateUtil {
     public static String formatDate(Date date, boolean zoned) {
         if (zoned) {
             return DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(ZoneId.systemDefault()).format(date.toInstant());
+        } else {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+        }
+    }
+
+    public static String zonedDateToUTC(Date date, boolean zoned) {
+        if (zoned) {
+            return DateTimeFormatter.ISO_OFFSET_DATE_TIME.withZone(TimeZone.getTimeZone("UTC").toZoneId()).format(date.toInstant());
         } else {
             return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
         }

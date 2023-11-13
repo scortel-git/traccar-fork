@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.concurrent.Future;
+import org.traccar.storage.StorageException;
 
 import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
