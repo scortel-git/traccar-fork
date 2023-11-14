@@ -16,6 +16,7 @@
 package org.traccar.handler.events;
 
 import io.netty.channel.ChannelHandler;
+import org.traccar.model.ElbMessage;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
 
@@ -47,7 +48,7 @@ public class MediaEventHandler extends BaseEventHandler {
                 })
                 .collect(Collectors.toMap(event -> event, event -> position));
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

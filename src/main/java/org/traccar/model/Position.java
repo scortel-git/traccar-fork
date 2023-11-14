@@ -29,7 +29,7 @@ public class Position extends Message {
     public static final String KEY_ORIGINAL = "raw";
     public static final String KEY_INDEX = "index";
     public static final String KEY_HDOP = "hdop";
-    public static final String KEY_PRIOR_NOTIFICATION = "prior";
+    public static final String KEY_ELB_NOTIFICATION = "prior";
     public static final String KEY_VDOP = "vdop";
     public static final String KEY_PDOP = "pdop";
     public static final String KEY_SATELLITES = "sat"; // in use
@@ -150,6 +150,7 @@ public class Position extends Message {
     public static final String ALARM_FUEL_LEAK = "fuelLeak";
     public static final String ALARM_TAMPERING = "tampering";
     public static final String ALARM_REMOVING = "removing";
+    public static final String KEY_END_FISHING_TRIP = "endFishingTrip";
 
     public Position() {
     }
@@ -313,14 +314,15 @@ public class Position extends Message {
     }
 
 
-    private PriorNotification priorNotification;
+    private ElbMessage elbObject;
 
     @JsonIgnore
     @QueryIgnore
-    public PriorNotification getPriorNotification() {return priorNotification;}
+    public ElbMessage getElbObject()
+    {return elbObject;}
 
-    public void setPriorNotification(PriorNotification priorNotification) {
-        this.priorNotification = priorNotification;
+    public void setElbObject(ElbMessage elbObject) {
+        this.elbObject = elbObject;
     }
 
     private List<Long> geofenceIds;

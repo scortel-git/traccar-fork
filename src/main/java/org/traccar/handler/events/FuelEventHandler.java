@@ -20,10 +20,7 @@ import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.helper.model.PriorNotificationUtil;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.model.*;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -77,7 +74,7 @@ public class FuelEventHandler extends BaseEventHandler {
 
         return null;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

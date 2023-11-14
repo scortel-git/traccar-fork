@@ -16,27 +16,25 @@
 package org.traccar.protocol;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
 import jakarta.inject.Inject;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Protocol;
-import org.traccar.helper.BitUtil;
-import org.traccar.helper.DateBuilder;
-import org.traccar.helper.UnitsConverter;
-import org.traccar.model.CellTower;
-import org.traccar.model.Network;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.handler.AcknowledgementHandler;
+import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
+import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
+import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
 
 public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
@@ -124,12 +122,15 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    protected void decodeInternal(Object msg, Position position, Storage database) {
+    protected void decodeInternal(Object msg, Position position, Storage database, DeviceSession deviceSession) {
         ByteBuf buf = (ByteBuf) msg;
 
         buf.readByte(); // STX
+        String deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+
         buf.readByte(); // Sequence
         byte mask = buf.readByte();
+        byte content = buf.readByte();
 
         switch (mask) {
             case MSG_FO_DATA:
@@ -145,8 +146,52 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
             case MSG_END_FISHING_OPERATION:
                 break;
             case MSG_END_FISHING_TRIP:
+                Device device = null;
+                try {
+                    device = database.getObject(Device.class, new Request(
+                            new Columns.All(), new Condition.Equals("id", position.getDeviceId())));
+                } catch (StorageException ignore) {
 
-
+                }
+                assert device != null;
+                Map<String, Object> attributes = device.getAttributes();
+                ElbEndFishingTrip trip = new ElbEndFishingTrip();
+                trip.setProtocol("endFishingTrip");
+                trip.setEstimatedArriveTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE() )  * 1000));
+                trip.setLandingPortId(buf.readShortLE());
+                trip.setEndFishingTripTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE() )  * 1000));
+                trip.setTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE() )  * 1000));
+                trip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                trip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                trip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
+                trip.setCourse((double) (buf.readShortLE() & 0xFFFFL));
+                trip.setCreationDate(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE() )  * 1000));
+                int tripLength = buf.readByte();
+                trip.setTripNumber(
+                        buf.readCharSequence(
+                                tripLength,
+                                StandardCharsets.UTF_8)
+                                .toString());
+                trip.set("analog1", buf.readIntLE());
+                trip.set("analog2", buf.readIntLE());
+                trip.set("dio1", buf.readByte());
+                trip.setDeviceId(position.getDeviceId());
+                trip.setPositionId(position.getId());
+                trip.setOutdated(false);
+                trip.setValid(true);
+                trip.setDeviceId(deviceId);
+                String cfr = attributes.get("cfr").toString();
+                String uniqueNumber = !Objects.equals(cfr, "") ? cfr : device.getUniqueId();
+                trip.setUniqueNumber(uniqueNumber + "-" + device.getId() + "-" + position.getDeviceTime().toInstant().getEpochSecond());
+                position.setProtocol(getProtocolName());
+                position.setLatitude(trip.getLatitude());
+                position.setLongitude(trip.getLongitude());
+                position.setAltitude(0.00);
+                position.setTime(trip.getDeviceTime());
+                position.setSpeed(trip.getSpeed());
+                position.setCourse(trip.getCourse());
+                position.set(Position.KEY_EVENT, Position.KEY_ELB_NOTIFICATION);
+                position.setElbObject(trip);
                 break;
             case MSG_ERROR_MODULE_ID:
                 break;
@@ -198,34 +243,36 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
             default:
                 break;
         }
-        PriorNotification priorNotification = new PriorNotification();
-        priorNotification.setProtocol(getProtocolName());
-        priorNotification.setDeviceId(deviceId);
-        priorNotification.setAltitude(0.0);
-        priorNotification.setCourse(120);
-        priorNotification.setTime(new Date());
-        priorNotification.setValid(true);
-        priorNotification.setOutdated(false);
-        position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
-        position.setPriorNotification(priorNotification);
+//        PriorNotification priorNotification = new PriorNotification();
+//        priorNotification.setProtocol(getProtocolName());
+//        priorNotification.setDeviceId(deviceId);
+//        priorNotification.setAltitude(0.0);
+//        priorNotification.setCourse(120);
+//        priorNotification.setTime(new Date());
+//        priorNotification.setValid(true);
+//        priorNotification.setOutdated(false);
+//        position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
+//        position.setElbObject(priorNotification);
 
     }
 
     @Override
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
         Position position = new Position(getProtocolName());
+
+        String deviceUniqueId = null;
         if (deviceId == 0) {
             ByteBuf buffer = (ByteBuf) msg;
             ByteBuf buf = buffer.copy();
             buf.readByte(); // STX
-            String deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+            deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
             DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceUniqueId);
             if (deviceSession == null) {
                 return null;
             }
             setDeviceId(deviceSession.getDeviceId());
         }
-        decodeInternal(msg, position, storage);
+        decodeInternal(msg, position, storage, getDeviceSession(channel, remoteAddress, deviceUniqueId));
 
 
         return position;

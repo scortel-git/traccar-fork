@@ -19,11 +19,11 @@ import java.util.Map;
 
 import org.traccar.BaseDataHandler;
 import org.traccar.database.NotificationManager;
+import org.traccar.model.ElbMessage;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
 
 import jakarta.inject.Inject;
-import org.traccar.model.PriorNotification;
 
 public abstract class BaseEventHandler extends BaseDataHandler {
 
@@ -43,15 +43,15 @@ public abstract class BaseEventHandler extends BaseDataHandler {
         return position;
     }
 
-    protected PriorNotification handlePosition(PriorNotification priorNotification) {
-        Map<Event, PriorNotification> events = analyzePriorNotification(priorNotification);
+    protected ElbMessage handlePosition(ElbMessage priorNotification) {
+        Map<Event, ElbMessage> events = analyzePriorNotification(priorNotification);
         if (events != null && !events.isEmpty()) {
-            notificationManager.updatePriorEvents(events);
+            notificationManager.updateElbEvents(events);
         }
         return priorNotification;
     }
 
     protected abstract Map<Event, Position> analyzePosition(Position position);
-    protected abstract Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification);
+    protected abstract Map<Event, ElbMessage> analyzePriorNotification(ElbMessage priorNotification);
 
 }

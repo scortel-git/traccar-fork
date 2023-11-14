@@ -82,7 +82,7 @@ public class NotificatorTraccar implements Notificator {
         this.key = config.getString(Keys.NOTIFICATOR_TRACCAR_KEY);
     }
     @Override
-    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
+    public void sendElb(Notification notification, User user, Event event, ElbMessage priorNotification) {
 
     }
 

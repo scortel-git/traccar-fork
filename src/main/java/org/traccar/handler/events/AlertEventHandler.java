@@ -21,6 +21,7 @@ import java.util.Map;
 import io.netty.channel.ChannelHandler;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
+import org.traccar.model.ElbMessage;
 import org.traccar.model.Event;
 import org.traccar.model.Position;
 import org.traccar.model.PriorNotification;
@@ -61,7 +62,7 @@ public class AlertEventHandler extends BaseEventHandler {
         }
         return null;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

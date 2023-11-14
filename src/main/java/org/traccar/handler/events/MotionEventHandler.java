@@ -22,10 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.AttributeUtil;
 import org.traccar.helper.model.PositionUtil;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.model.*;
 import org.traccar.reports.common.TripsConfig;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.session.state.MotionProcessor;
@@ -85,7 +82,7 @@ public class MotionEventHandler extends BaseEventHandler {
         }
         return state.getEvent() != null ? Collections.singletonMap(state.getEvent(), position) : null;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

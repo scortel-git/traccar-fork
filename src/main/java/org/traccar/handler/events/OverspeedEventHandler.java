@@ -119,7 +119,7 @@ public class OverspeedEventHandler extends BaseEventHandler {
         }
         return state.getEvent() != null ? Collections.singletonMap(state.getEvent(), position) : null;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

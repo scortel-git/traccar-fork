@@ -80,7 +80,7 @@ public class NotificatorPushover implements Notificator {
         client.target(url).request().post(Entity.json(message)).close();
     }
     @Override
-    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
+    public void sendElb(Notification notification, User user, Event event, ElbMessage priorNotification) {
 
     }
 

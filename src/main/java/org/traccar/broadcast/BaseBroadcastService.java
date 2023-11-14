@@ -49,9 +49,9 @@ public abstract class BaseBroadcastService implements BroadcastService {
         sendMessage(message);
     }
     @Override
-    public void updatePriorNotification(boolean local, PriorNotification priorNotification) {
+    public void updatePriorNotification(boolean local, ElbMessage elbMessage) {
         BroadcastMessage message = new BroadcastMessage();
-        message.setPriorNotification(priorNotification);
+        message.setPriorNotification(elbMessage);
         sendMessage(message);
     }
 
@@ -99,7 +99,7 @@ public abstract class BaseBroadcastService implements BroadcastService {
         } else if (message.getCommandDeviceId() != null) {
             listeners.forEach(listener -> listener.updateCommand(false, message.getCommandDeviceId()));
         } else if (message.getPriorNotification() != null) {
-                listeners.forEach(listener -> listener.updatePriorNotification(false, message.getPriorNotification()));
+                listeners.forEach(listener -> listener.updateElbNotification(false, message.getPriorNotification()));
         } else if (message.getChanges() != null) {
             var iterator = message.getChanges().entrySet().iterator();
             if (iterator.hasNext()) {

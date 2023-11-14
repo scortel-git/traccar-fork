@@ -27,12 +27,7 @@ import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.database.DeviceLookupService;
 import org.traccar.database.NotificationManager;
-import org.traccar.model.Device;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
-import org.traccar.model.Event;
-import org.traccar.model.User;
-import org.traccar.model.BaseModel;
+import org.traccar.model.*;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
@@ -315,7 +310,7 @@ public class ConnectionManager implements BroadcastInterface {
         }
     }
 
-    public synchronized void updatePriorNotification(boolean local, PriorNotification priorNotification) {
+    public synchronized void updatePriorNotification(boolean local, ElbMessage priorNotification) {
         if (local) {
             broadcastService.updatePriorNotification(true, priorNotification);
         }
@@ -323,6 +318,18 @@ public class ConnectionManager implements BroadcastInterface {
             if (listeners.containsKey(userId)) {
                 for (UpdateListener listener : listeners.get(userId)) {
                     listener.onUpdatePriorNotification(priorNotification);
+                }
+            }
+        }
+    }
+    public synchronized void updateElbEntity(boolean local, ElbMessage entity) {
+        if (local) {
+            broadcastService.updatePriorNotification(true, entity);
+        }
+        for (long userId : deviceUsers.getOrDefault(entity.getDeviceId(), Collections.emptySet())) {
+            if (listeners.containsKey(userId)) {
+                for (UpdateListener listener : listeners.get(userId)) {
+                    listener.onUpdatePriorNotification(entity);
                 }
             }
         }
@@ -357,7 +364,10 @@ public class ConnectionManager implements BroadcastInterface {
         void onKeepalive();
         void onUpdateDevice(Device device);
         void onUpdatePosition(Position position);
-        void onUpdatePriorNotification(PriorNotification priorNotification);
+        void onUpdatePriorNotification(ElbMessage priorNotification);
+
+        void onUpdateElbNotification(ElbMessage entity);
+
         void onUpdateEvent(Event event);
     }
 

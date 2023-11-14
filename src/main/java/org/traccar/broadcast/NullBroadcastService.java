@@ -15,6 +15,8 @@
  */
 package org.traccar.broadcast;
 
+import org.traccar.model.ElbMessage;
+
 public class NullBroadcastService implements BroadcastService {
 
     @Override
@@ -27,10 +29,17 @@ public class NullBroadcastService implements BroadcastService {
     }
 
     @Override
+    public void updatePriorNotification(boolean local, ElbMessage priorNotification) {
+
+    }
+
+    @Override
     public void start() throws Exception {
     }
 
     @Override
     public void stop() throws Exception {
     }
+
+
 }

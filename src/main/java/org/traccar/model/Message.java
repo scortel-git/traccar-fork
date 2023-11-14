@@ -27,6 +27,7 @@ public class Message extends ExtendedModel {
         this.deviceId = deviceId;
     }
 
+
     private String type;
 
     public String getType() {

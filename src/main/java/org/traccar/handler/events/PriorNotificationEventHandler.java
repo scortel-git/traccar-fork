@@ -18,24 +18,22 @@ package org.traccar.handler.events;
 import io.netty.channel.ChannelHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import netscape.javascript.JSObject;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.model.*;
 import org.traccar.session.ConnectionManager;
+import org.traccar.session.DeviceSession;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
-import org.traccar.storage.query.Order;
 import org.traccar.storage.query.Request;
 
 import java.util.Collections;
-import java.util.Date;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Singleton
 @ChannelHandler.Sharable
@@ -49,7 +47,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
     private final CacheManager cacheManager;
     private final boolean ignoreDuplicateAlerts;
 
-    protected PriorNotificationEventHandler priorNotification;
+    protected Object priorNotification;
 
 
     @Inject
@@ -61,19 +59,25 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
     @Override
     protected Map<Event, Position> analyzePosition(Position position) {
         Object alarm = position.getAttributes().get(Position.KEY_EVENT);
-        if (alarm == Position.KEY_PRIOR_NOTIFICATION) {
+        if (alarm == Position.KEY_ELB_NOTIFICATION) {
             try {
-                savePriorNotification(position);
+                saveEndFishingTripNotification(position);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             }
 
 
+        } else if (alarm == Position.KEY_END_FISHING_TRIP) {
+            try {
+                saveEndFishingTripNotification(position);
+            } catch (StorageException e) {
+                throw new RuntimeException(e);
+            }
         }
         if (alarm != null) {
             boolean ignoreAlert = false;
             if (ignoreDuplicateAlerts) {
-                PriorNotification lastPosition = cacheManager.getPriorNotification(position.getPriorNotification().getDeviceId());
+                PriorNotification lastPosition = cacheManager.getPriorNotification(position.getDeviceId());
                 if (lastPosition != null && alarm.equals(lastPosition.getAttributes().get(Position.KEY_ALARM))) {
                     ignoreAlert = true;
                 }
@@ -86,25 +90,47 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         }
         return null;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }
 
     public void savePriorNotification(Position position) throws StorageException {
 
-        PriorNotification priorNotification = position.getPriorNotification();
-        priorNotification.setDeviceId(position.getDeviceId());
-//        priorNotification.setAltitude(position.getAltitude());
-//        priorNotification.setCourse(position.getCourse());
-//        priorNotification.setTime(position.getDeviceTime());
-//        priorNotification.setValid(position.getValid());
-//        priorNotification.setOutdated(position.getOutdated());
-        priorNotification.set("positionId", position.getId());
+        Object object = position.getElbObject();
+        if (object instanceof PriorNotification) {
+            PriorNotification priorNotification = (PriorNotification) object;
+            priorNotification.setDeviceId(position.getDeviceId());
 
 
-        priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
-        connectionManager.updatePriorNotification(true, priorNotification);
+            priorNotification.set("positionId", position.getId());
+            priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
+            connectionManager.updatePriorNotification(true, priorNotification);
+
+
+
+        }
+    }
+    public void saveEndFishingTripNotification(Position position) throws StorageException {
+        ElbMessage entity = position.getElbObject();
+        entity.setDeviceId(position.getDeviceId());
+        entity.setPositionId(position.getId());
+        Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        if (device == null) {
+            try {
+                device = storage.getObject(Device.class, new Request(
+                        new Columns.All(), new Condition.Equals("id", position.getDeviceId())));
+            } catch (StorageException ignore) {
+
+            }
+        }
+        assert device != null;
+
+
+        entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+        connectionManager.updateElbEntity(true, entity);
+
+
     }
 
 }
