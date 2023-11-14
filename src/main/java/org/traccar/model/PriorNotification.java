@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @StorageName("tc_prior_notification")
-public class PriorNotification extends Message {
+public class PriorNotification extends ElbMessage {
 
     public static final String KEY_ORIGINAL = "raw";
     public static final String KEY_INDEX = "index";
@@ -225,41 +225,6 @@ public class PriorNotification extends Message {
         this.valid = valid;
     }
 
-    private double latitude;
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException("Latitude out of range");
-        }
-        this.latitude = latitude;
-    }
-
-    private double longitude;
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException("Longitude out of range");
-        }
-        this.longitude = longitude;
-    }
-
-    private double altitude; // value in meters
-
-    public double getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(double altitude) {
-        this.altitude = altitude;
-    }
 
     private double speed; // value in knots
 
@@ -281,15 +246,6 @@ public class PriorNotification extends Message {
         this.course = course;
     }
 
-    private String address;
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
     private double accuracy;
 

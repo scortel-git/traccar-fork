@@ -22,12 +22,8 @@ import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.traccar.helper.model.PositionUtil;
-import org.traccar.helper.model.PriorNotificationUtil;
+import org.traccar.model.*;
 import org.traccar.session.ConnectionManager;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 
@@ -43,6 +39,7 @@ public class AsyncSocket extends WebSocketAdapter implements ConnectionManager.U
     private static final String KEY_DEVICES = "devices";
     private static final String KEY_POSITIONS = "positions";
     private static final String KEY_PRIOR_NOTIFICATION = "priors";
+//    private static final String KEY_PRIOR_NOTIFICATION = "priors";
     private static final String KEY_EVENTS = "events";
 
     private final ObjectMapper objectMapper;
@@ -102,9 +99,16 @@ public class AsyncSocket extends WebSocketAdapter implements ConnectionManager.U
     }
 
     @Override
-    public void onUpdatePriorNotification(PriorNotification priorNotification) {
+    public void onUpdatePriorNotification(ElbMessage elbMessage) {
         Map<String, Collection<?>> data = new HashMap<>();
-        data.put(KEY_PRIOR_NOTIFICATION, Collections.singletonList(priorNotification));
+        data.put(KEY_PRIOR_NOTIFICATION, Collections.singletonList(elbMessage));
+        sendData(data);
+    }
+
+    @Override
+    public void onUpdateElbNotification(ElbMessage entity) {
+        Map<String, Collection<?>> data = new HashMap<>();
+        data.put(KEY_PRIOR_NOTIFICATION, Collections.singletonList(entity));
         sendData(data);
     }
 

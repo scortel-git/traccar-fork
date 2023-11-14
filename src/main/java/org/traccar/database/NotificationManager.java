@@ -112,7 +112,7 @@ public class NotificationManager {
 
         forwardEvent(event, position);
     }
-    private void updatePriorEvent(Event event, PriorNotification priorNotification) {
+    private void updatePriorEvent(Event event, ElbMessage priorNotification) {
         try {
             event.setId(storage.addObject(event, new Request(new Columns.Exclude("id"))));
         } catch (StorageException error) {
@@ -148,7 +148,7 @@ public class NotificationManager {
                 cacheManager.getNotificationUsers(notification.getId(), event.getDeviceId()).forEach(user -> {
                     for (String notificator : notification.getNotificatorsTypes()) {
                         try {
-                            notificatorManager.getNotificator(notificator).sendPrior(notification, user, event, priorNotification);
+                            notificatorManager.getNotificator(notificator).sendElb(notification, user, event, priorNotification);
                         } catch (MessageException exception) {
                             LOGGER.warn("Notification failed", exception);
                         }
@@ -157,7 +157,7 @@ public class NotificationManager {
             });
         }
 
-        forwardEventPrior(event, priorNotification);
+        forwardEventElb(event, priorNotification);
     }
 
     private void forwardEvent(Event event, Position position) {
@@ -179,11 +179,11 @@ public class NotificationManager {
             });
         }
     }
-    private void forwardEventPrior(Event event, PriorNotification priorNotification) {
+    private void forwardEventElb(Event event, ElbMessage elbNotification) {
         if (eventForwarder != null) {
             EventData eventData = new EventData();
             eventData.setEvent(event);
-            eventData.setPriorNotification(priorNotification);
+            eventData.setElbNotification(elbNotification);
             eventData.setDevice(cacheManager.getObject(Device.class, event.getDeviceId()));
             if (event.getGeofenceId() != 0) {
                 eventData.setGeofence(cacheManager.getObject(Geofence.class, event.getGeofenceId()));
@@ -213,13 +213,13 @@ public class NotificationManager {
             }
         }
     }
-    public void updatePriorEvents(Map<Event, PriorNotification> events) {
-        for (Entry<Event, PriorNotification> entry : events.entrySet()) {
+    public void updateElbEvents(Map<Event, ElbMessage> events) {
+        for (Entry<Event, ElbMessage> entry : events.entrySet()) {
             Event event = entry.getKey();
-            PriorNotification priorNotification = entry.getValue();
+            ElbMessage elbNotification = entry.getValue();
             try {
                 cacheManager.addDevice(event.getDeviceId());
-                updatePriorEvent(event, priorNotification);
+                updatePriorEvent(event, elbNotification);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             } finally {

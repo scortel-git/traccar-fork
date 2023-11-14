@@ -81,7 +81,7 @@ public class GeofenceEventHandler extends BaseEventHandler {
         }
         return events;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

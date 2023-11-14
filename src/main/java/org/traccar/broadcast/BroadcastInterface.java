@@ -24,9 +24,10 @@ public interface BroadcastInterface {
 
     default void updatePosition(boolean local, Position position) {
     }
-    default void updatePriorNotification(boolean local, PriorNotification priorNotification) {
+    default void updatePriorNotification(boolean local, ElbMessage priorNotification) {
     }
-
+    default void updateElbNotification(boolean local, ElbMessage entity) {
+    }
     default void updateEvent(boolean local, long userId, Event event) {
     }
 

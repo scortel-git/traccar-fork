@@ -38,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class OsmAndProtocolDecoder extends BaseHttpProtocolDecoder {
 
@@ -236,8 +235,8 @@ public class OsmAndProtocolDecoder extends BaseHttpProtocolDecoder {
         priorNotification.setValid(position.getValid());
         priorNotification.setOutdated(position.getOutdated());
         priorNotification.set("posId", position.getId());
-        position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
-        position.setPriorNotification(priorNotification);
+        position.set(Position.KEY_EVENT, Position.KEY_ELB_NOTIFICATION);
+        position.setElbObject(priorNotification);
 
         priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
     }

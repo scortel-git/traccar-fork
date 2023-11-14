@@ -21,10 +21,7 @@ import java.util.Map;
 
 import io.netty.channel.ChannelHandler;
 import org.traccar.helper.model.PositionUtil;
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.model.*;
 import org.traccar.session.cache.CacheManager;
 
 import jakarta.inject.Inject;
@@ -68,7 +65,7 @@ public class IgnitionEventHandler extends BaseEventHandler {
         }
         return result;
     }
-    protected Map<Event, PriorNotification> analyzePriorNotification(PriorNotification priorNotification) {
+    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
 
         return null;
     }

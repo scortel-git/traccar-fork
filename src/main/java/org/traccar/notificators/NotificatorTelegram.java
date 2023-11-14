@@ -82,7 +82,7 @@ public class NotificatorTelegram implements Notificator {
         return locationMessage;
     }
     @Override
-    public void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) {
+    public void sendElb(Notification notification, User user, Event event, ElbMessage priorNotification) {
 
     }
     @Override

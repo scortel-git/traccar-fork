@@ -22,6 +22,6 @@ import org.traccar.notification.MessageException;
 public interface Notificator {
 
     void send(Notification notification, User user, Event event, Position position) throws MessageException;
-    void sendPrior(Notification notification, User user, Event event, PriorNotification priorNotification) throws MessageException;
+    void sendElb(Notification notification, User user, Event event, ElbMessage elbNotification) throws MessageException;
 
 }

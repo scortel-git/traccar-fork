@@ -16,8 +16,12 @@
 package org.traccar.broadcast;
 
 import org.traccar.LifecycleObject;
+import org.traccar.model.ElbMessage;
+import org.traccar.model.PriorNotification;
 
 public interface BroadcastService extends LifecycleObject, BroadcastInterface {
     boolean singleInstance();
     void registerListener(BroadcastInterface listener);
+
+    void updatePriorNotification(boolean local, ElbMessage priorNotification);
 }

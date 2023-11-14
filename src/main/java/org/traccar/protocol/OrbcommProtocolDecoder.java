@@ -22,7 +22,6 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import jakarta.inject.Inject;
 import org.traccar.BasePipelineFactory;
 import org.traccar.BaseProtocolDecoder;
-import org.traccar.config.Config;
 import org.traccar.session.DeviceSession;
 import org.traccar.Protocol;
 import org.traccar.helper.UnitsConverter;
@@ -43,7 +42,6 @@ import java.io.StringReader;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -87,7 +85,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
     protected Object decode(
             Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
 
-        if (channel != null && isFirstRun) {
+        if (isFirstRun) {
             poller = BasePipelineFactory.getHandler(channel.pipeline(), OrbcommProtocolPoller.class);
             if (poller != null) {
                 poller.setStartTime(setInitialTime());
@@ -131,6 +129,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                 try {
                     JsonObject message = messages.getJsonObject(i);
                     DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, message.getString("MobileID"));
+                    String attributes = deviceSession.get("attributes");
                     if (deviceSession != null) {
 
                         Position position = new Position(getProtocolName());
@@ -139,9 +138,9 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                         position.setDeviceTime(dateFormat.parse(message.getString("ReceiveUTC")));
-                        int sinNummber = message.getInt("SIN");
-                        position.set("sin", sinNummber);
-                        if (sinNummber == 239) {
+                        int sinNumber = message.getInt("SIN");
+                        position.set("sin", sinNumber);
+                        if (sinNumber == 239) {
                             position.set("fa", true);
                             JsonArray data = message.getJsonArray("RawPayload");
 
@@ -165,7 +164,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                             ByteBuf frame = Unpooled.buffer(existingData.readableBytes() + uniqueIdBytes.length + 1);
 
-                            frame.writeByte(0x2);
+                            frame.writeByte(ElbBaseProtocolDecoder.MSG_START);
                             frame.writeBytes(uniqueIdBytes);
 
                             frame.writeBytes(existingData);
@@ -173,10 +172,11 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                             ElbBaseProtocolDecoder elbBaseProtocolDecoder = new ElbBaseProtocolDecoder(elbBaseProtocol);
                             elbBaseProtocolDecoder.setDeviceId(deviceSession.getDeviceId());
-                            elbBaseProtocolDecoder.decodeInternal(frame, position, storage);
+                            elbBaseProtocolDecoder.decodeInternal(frame, position, storage, deviceSession);
 
 
-                        } else if (sinNummber == 237) {
+                        }
+                        if (sinNumber == 237) {
 
 
                             JsonObject payload = message.getJsonObject("Payload");

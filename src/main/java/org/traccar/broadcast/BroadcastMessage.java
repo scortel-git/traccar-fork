@@ -15,10 +15,7 @@
  */
 package org.traccar.broadcast;
 
-import org.traccar.model.Device;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
+import org.traccar.model.*;
 
 import java.util.Map;
 
@@ -44,13 +41,13 @@ public class BroadcastMessage {
         this.position = position;
     }
 
-    private PriorNotification priorNotification;
+    private ElbMessage priorNotification;
 
-    public PriorNotification getPriorNotification() {
+    public ElbMessage getPriorNotification() {
         return priorNotification;
     }
 
-    public void setPriorNotification(PriorNotification priorNotification) {
+    public void setPriorNotification(ElbMessage priorNotification) {
         this.priorNotification = priorNotification;
     }
 

@@ -40,14 +40,14 @@ public class EventData {
     public void setPosition(Position position) {
         this.position = position;
     }
-    private PriorNotification priorNotification;
+    private ElbMessage elbNotification;
 
-    public PriorNotification getPriorNotification() {
-        return priorNotification;
+    public ElbMessage getElbNotification() {
+        return elbNotification;
     }
 
-    public void setPriorNotification(PriorNotification priorNotification) {
-        this.priorNotification = priorNotification;
+    public void setElbNotification(ElbMessage elbNotification) {
+        this.elbNotification = elbNotification;
     }
 
 
