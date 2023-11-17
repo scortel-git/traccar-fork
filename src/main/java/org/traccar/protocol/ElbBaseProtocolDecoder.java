@@ -199,7 +199,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     String uniqueNumber = !Objects.equals(cfr, null) ? cfr : device.getUniqueId();
                     long elbEndFishingTripCounts = -1;
                     try {
-                        assert device != null;
                         elbEndFishingTripCounts = database.getObjectsCount(ElbEndFishingTrip.class,
                                 new Request(
                                         new Columns.All(), new Condition.And(
@@ -209,7 +208,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                                 )
                         );
                     } catch (StorageException ignore) {
-                        int i = 0;
                     }
 
                     trip.setUniqueNumber(
@@ -338,14 +336,14 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         List<Position> positions = new LinkedList<>();
         Position position = new Position(getProtocolName());
 
-        String deviceUniqueId = null;
+        String deviceUniqueId;
 
         ByteBuf buffer = (ByteBuf) msg;
         ByteBuf buf = buffer.copy();
-        byte STX = buf.readByte(); // STX
-        byte seq = buf.readByte(); // seq
-        byte mask = buf.readByte(); // mask
-        byte content = buf.readByte(); // content
+        buf.readByte(); // STX
+        buf.readByte(); // seq
+        buf.readByte(); // mask
+        buf.readByte(); // content
         deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceUniqueId);
         if (deviceSession == null) {
