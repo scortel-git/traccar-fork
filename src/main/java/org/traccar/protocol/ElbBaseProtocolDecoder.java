@@ -15,24 +15,19 @@
  */
 package org.traccar.protocol;
 
-import com.google.common.collect.Iterables;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.channel.Channel;
-import io.netty.util.CharsetUtil;
 import jakarta.inject.Inject;
 import jakarta.xml.bind.DatatypeConverter;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Protocol;
-import org.traccar.handler.AcknowledgementHandler;
 import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
-import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
-import org.traccar.storage.query.Order;
 import org.traccar.storage.query.Request;
 
 import java.net.SocketAddress;
@@ -96,36 +91,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
     private long deviceId = 0;
 
-    protected void saveObject(Object object, Storage storage) throws StorageException {
-
-        if (object instanceof PriorNotification) {
-            PriorNotification priorNotification = (PriorNotification) object;
-            priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
-        }
-
-    }
-
-    private String decodeAlarm(int value) {
-        switch (value) {
-            case 4:
-                return Position.ALARM_LOW_BATTERY;
-            case 6:
-                return Position.ALARM_POWER_RESTORED;
-            case 10:
-                return Position.ALARM_SOS;
-            case 13:
-                return Position.ALARM_BRAKING;
-            case 14:
-                return Position.ALARM_ACCELERATION;
-            case 17:
-                return Position.ALARM_OVERSPEED;
-            case 23:
-                return Position.ALARM_ACCIDENT;
-            default:
-                return null;
-        }
-    }
-
     protected void decodeInternal(Object msg, Position position, Storage database) {
 
 
@@ -135,7 +100,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         buf.readByte(); // STX
         buf.readByte(); // Sequence
         byte mask = buf.readByte();
-        byte content = buf.readByte();
+        buf.readByte(); // content
         String deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
 
         switch (mask) {
@@ -171,7 +136,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     device = database.getObject(Device.class, new Request(
                             new Columns.All(), new Condition.Equals("uniqueId", deviceUniqueId)));
                 } catch (StorageException ignore) {
-                    int u = 0;
                 }
 
                 int counter = 1;
@@ -217,7 +181,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                             )
                     );
                 } catch (StorageException ignore) {
-                    int i = 0;
                 }
                 assert oldElbEndFishingTrips != null;
                 if (!oldElbEndFishingTrips.isEmpty()) {
@@ -259,13 +222,12 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 position.setProtocol(getProtocolName());
                 position.setLatitude(trip.getLatitude());
                 position.setLongitude(trip.getLongitude());
-//                position.setAltitude(0.00);
+                position.setAltitude(0.00);
                 position.setTime(trip.getDeviceTime());
                 position.setSpeed(trip.getSpeed());
                 position.setCourse(trip.getCourse());
                 position.set(Position.KEY_EVENT, Position.KEY_ELB_NOTIFICATION);
                 position.setElbObject(trip);
-                position.setAltitude(239);
                 position.setValid(true);
                 break;
             case MSG_ERROR_MODULE_ID:
