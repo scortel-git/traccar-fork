@@ -26,7 +26,8 @@ import java.util.stream.Collectors;
 @StorageName("elb_end_fishing_trip")
 public class ElbEndFishingTrip extends ElbMessage {
 
-    public final long ADDITIONAL_SECONDS = 1514764800L;  // 1699971061
+    @JsonIgnore
+    public final long ADDITIONAL_SECONDS = 1514764800L;
 
     public ElbEndFishingTrip() {
     }
@@ -150,6 +151,7 @@ public class ElbEndFishingTrip extends ElbMessage {
         return outdated;
     }
 
+    @JsonIgnore
     public void setOutdated(boolean outdated) {
         this.outdated = outdated;
     }
