@@ -480,6 +480,25 @@ public final class QueryBuilder {
         }
         return 0;
     }
+    public long executeCount() throws SQLException {
+
+        if (query != null) {
+            try {
+                logQuery();
+                statement.execute();
+                if (!returnGeneratedKeys) {
+                    ResultSet resultSet = statement.getResultSet();
+                    if (resultSet.next()) {
+                        return resultSet.getLong(1);
+                    }
+                }
+            } finally {
+                statement.close();
+                connection.close();
+            }
+        }
+        return 0;
+    }
 
     public List<Permission> executePermissionsQuery() throws SQLException {
         List<Permission> result = new LinkedList<>();

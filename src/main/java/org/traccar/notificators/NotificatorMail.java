@@ -37,8 +37,13 @@ public class NotificatorMail implements Notificator {
         this.notificationFormatter = notificationFormatter;
     }
     @Override
-    public void sendElb(Notification notification, User user, Event event, ElbMessage priorNotification) {
-
+    public void sendElb(Notification notification, User user, Event event, ElbMessage elbMessage)  throws MessageException {
+        try {
+            var fullMessage = notificationFormatter.formatELBMessage(user, event, elbMessage, "full");
+            mailManager.sendMessage(user, false, fullMessage.getSubject(), fullMessage.getBody());
+        } catch (MessagingException e) {
+            throw new MessageException(e);
+        }
     }
     @Override
     public void send(Notification notification, User user, Event event, Position position) throws MessageException {

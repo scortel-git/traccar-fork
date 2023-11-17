@@ -55,6 +55,11 @@ public class MemoryStorage extends Storage {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public <T> long getObjectsCount(Class<T> clazz, Request request) throws StorageException {
+        return 0;
+    }
+
     private boolean checkCondition(Condition genericCondition, Object object) {
         if (genericCondition == null) {
             return true;

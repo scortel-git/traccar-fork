@@ -39,6 +39,7 @@ public class Event extends Message {
     }
 
     public static final String ALL_EVENTS = "allEvents";
+    public static final String TYPE_ELB_MESSAGE = "prior";
 
     public static final String TYPE_COMMAND_RESULT = "commandResult";
 

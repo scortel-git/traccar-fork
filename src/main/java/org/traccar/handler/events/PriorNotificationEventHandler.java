@@ -83,7 +83,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                 }
             }
             if (!ignoreAlert) {
-                Event event = new Event(Event.ALL_EVENTS, position);
+                Event event = new Event(Event.TYPE_ELB_MESSAGE, position);
                 event.set(Position.KEY_EVENT, (String) alarm);
                 return Collections.singletonMap(event, position);
             }

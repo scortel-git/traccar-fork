@@ -24,6 +24,7 @@ import java.util.List;
 public abstract class Storage {
 
     public abstract <T> List<T> getObjects(Class<T> clazz, Request request) throws StorageException;
+    public abstract <T> long getObjectsCount(Class<T> clazz, Request request) throws StorageException;
 
     public abstract <T> long addObject(T entity, Request request) throws StorageException;
 
