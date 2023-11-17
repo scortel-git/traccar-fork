@@ -42,10 +42,21 @@
     <entry key="database.registerUnknown">true</entry>
     <entry key="database.registerUnknown.defaultGroupId">1</entry>
     <entry key='database.ignoreUnknown'>false</entry>
-    <entry key="database.saveOriginal config">true</entry>
+    <entry key="database.saveOriginal config">false</entry>
     <entry key='database.changelog'>./schema/changelog-master.xml</entry>
 
-<!--    <entry key='gps103.port'>5001</entry>-->
+    <entry key='mail.smtp.host'>scortel.com</entry>
+    <entry key='mail.smtp.port'>993</entry>
+    <entry key='mail.smtp.starttls.enable'>true</entry>
+    <entry key='mail.smtp.port'>465</entry>
+    <entry key='mail.smtp.ssl.enable'>true</entry>
+    <entry key='mail.smtp.from'>no-reply@scortel.com</entry>
+    <entry key='mail.smtp.auth'>true</entry>
+    <entry key='mail.smtp.username'>no-reply@scortel.com</entry>
+    <entry key='mail.smtp.password'>A5yks$So0fav</entry>
+
+
+    <!--    <entry key='gps103.port'>5001</entry>-->
 <!--    <entry key='tk103.port'>5002</entry>-->
 <!--    <entry key='gl100.port'>5003</entry>-->
 <!--    <entry key='gl200.port'>5004</entry>-->
@@ -296,16 +307,16 @@
 <!--    <entry key='t622iridium.port'>5248</entry>-->
 <!--    <entry key='pui.port'>5249</entry>-->
 <!--    <entry key='nto.port'>5250</entry>-->
-<!--    <entry key='ramac.port'>5251</entry>-->
-<entry key='protocols.enable'>osmand,orbcomm</entry>
+<entry key='protocols.enable'>osmand,orbcomm,elbbase</entry>
+<entry key='elbbase.port'>6666</entry>
 <entry key='osmand.port'>5055</entry>
-<entry key='orbcomm.address'>isatdatapro.orbcomm.com</entry>
-<entry key='orbcomm.port'>443</entry>
-<entry key='orbcomm.ssl'>true</entry>
-<entry key='orbcomm.interval'>20</entry>
-<entry key='orbcomm.devices'>01435479SKY4EF0,01435427SKY7DEC</entry>
-<entry key='orbcomm.accessId'>70001422</entry>
-<entry key='orbcomm.password'>SCIARA</entry>
+<!--<entry key='orbcomm.address'>isatdatapro.orbcomm.com</entry>-->
+<!--<entry key='orbcomm.port'>443</entry>-->
+<!--<entry key='orbcomm.ssl'>true</entry>-->
+<!--<entry key='orbcomm.interval'>20</entry>-->
+<!--<entry key='orbcomm.devices'>01435479SKY4EF0,01435427SKY7DEC</entry>-->
+<!--<entry key='orbcomm.accessId'>70001422</entry>-->
+<!--<entry key='orbcomm.password'>SCIARA</entry>-->
 
 
 

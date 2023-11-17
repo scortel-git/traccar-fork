@@ -35,8 +35,22 @@ public final class NotificatorWeb implements Notificator {
         this.notificationFormatter = notificationFormatter;
     }
     @Override
-    public void sendElb(Notification notification, User user, Event event, ElbMessage priorNotification) {
+    public void sendElb(Notification notification, User user, Event event, ElbMessage elbMessage) {
 
+        Event copy = new Event();
+        copy.setId(event.getId());
+        copy.setDeviceId(event.getDeviceId());
+        copy.setType(event.getType());
+        copy.setEventTime(event.getEventTime());
+        copy.setPositionId(event.getPositionId());
+        copy.setGeofenceId(event.getGeofenceId());
+        copy.setMaintenanceId(event.getMaintenanceId());
+        copy.getAttributes().putAll(event.getAttributes());
+
+        var message = notificationFormatter.formatELBMessage(user, event, elbMessage, "short");
+        copy.set("message", message.getBody());
+
+        connectionManager.updateEvent(true, user.getId(), copy);
     }
     @Override
     public void send(Notification notification, User user, Event event, Position position) {

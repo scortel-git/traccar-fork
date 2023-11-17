@@ -310,14 +310,14 @@ public class ConnectionManager implements BroadcastInterface {
         }
     }
 
-    public synchronized void updatePriorNotification(boolean local, ElbMessage priorNotification) {
+    public synchronized void updatePriorNotification(boolean local, ElbMessage elbMessage) {
         if (local) {
-            broadcastService.updatePriorNotification(true, priorNotification);
+            broadcastService.updatePriorNotification(true, elbMessage);
         }
-        for (long userId : deviceUsers.getOrDefault(priorNotification.getDeviceId(), Collections.emptySet())) {
+        for (long userId : deviceUsers.getOrDefault(elbMessage.getDeviceId(), Collections.emptySet())) {
             if (listeners.containsKey(userId)) {
                 for (UpdateListener listener : listeners.get(userId)) {
-                    listener.onUpdatePriorNotification(priorNotification);
+                    listener.onUpdatePriorNotification(elbMessage);
                 }
             }
         }

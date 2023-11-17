@@ -15,7 +15,6 @@
  */
 package org.traccar.protocol;
 
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import jakarta.inject.Inject;
 import org.traccar.BaseProtocol;
 import org.traccar.PipelineBuilder;

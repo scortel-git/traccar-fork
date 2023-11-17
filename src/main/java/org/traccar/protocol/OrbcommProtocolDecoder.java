@@ -45,6 +45,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@SuppressWarnings({"ConstantValue", "unused", "SameParameterValue"})
 public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
     private OrbcommProtocolPoller poller;
@@ -140,91 +141,103 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                         position.setDeviceTime(dateFormat.parse(message.getString("ReceiveUTC")));
                         int sinNumber = message.getInt("SIN");
                         position.set("sin", sinNumber);
-                        if (sinNumber == 239) {
-                            position.set("fa", true);
-                            JsonArray data = message.getJsonArray("RawPayload");
+                        if (sinNumber == 239 || sinNumber == 237) {
 
-                            ByteBuf buf = Unpooled.buffer();
 
-                            for (int b = 0; b < data.size(); b++) {
-                                int intValue = data.getInt(b);
-                                byte byteValue = (byte) intValue;
-                                buf.writeByte(byteValue);
+                            if (sinNumber == 239) {
+
+                                JsonArray data = message.getJsonArray("RawPayload");
+
+                                ByteBuf buf = Unpooled.buffer();
+
+                                for (int b = 0; b < data.size(); b++) {
+                                    int intValue = data.getInt(b);
+                                    byte byteValue = (byte) intValue;
+                                    buf.writeByte(byteValue);
+                                }
+
+                                position.set("mask", Integer.toHexString(data.getInt(4)));
+//                            position.set("raw", Arrays.toString(data.toArray()));
+                                byte[] uniqueIdBytes = deviceSession.getUniqueId().getBytes(StandardCharsets.US_ASCII);
+
+                                assert channel != null;
+                                ByteBuf existingData = (ByteBuf) new ElbFrameDecoder().decode(channel.pipeline().lastContext(), channel, buf);
+                                existingData.skipBytes(1);
+
+                                ByteBuf frame = Unpooled.buffer(existingData.readableBytes() + uniqueIdBytes.length + 1);
+                                byte seq = existingData.readByte();
+                                byte mask = existingData.readByte();
+                                byte dataContent = existingData.readByte();
+
+                                frame.writeByte(ElbBaseProtocolDecoder.MSG_START);
+                                frame.writeByte(seq);
+                                frame.writeByte(mask);
+                                frame.writeByte(dataContent);
+                                frame.writeBytes(uniqueIdBytes);
+                                frame.writeBytes(existingData);
+
+                                ElbBaseProtocol elbBaseProtocol = new ElbBaseProtocol(getConfig());
+
+                                ElbBaseProtocolDecoder elbBaseProtocolDecoder = new ElbBaseProtocolDecoder(elbBaseProtocol);
+                                elbBaseProtocolDecoder.setDeviceId(deviceSession.getDeviceId());
+                                try {
+                                    elbBaseProtocolDecoder.decodeInternal(frame, position, storage);
+
+                                } catch (Exception e) {
+
+                                }
+
+
                             }
+                            if (sinNumber == 237) {
 
 
-                            String hexMask = Integer.toHexString(data.getInt(4));
-                            position.set("mask", hexMask);
-                            position.set("raw", Arrays.toString(data.toArray()));
-                            byte[] uniqueIdBytes = deviceSession.getUniqueId().getBytes(StandardCharsets.US_ASCII);
+                                JsonObject payload = message.getJsonObject("Payload");
+                                JsonArray fields = null;
+                                try {
+                                    fields = payload.getJsonArray("Fields");
+                                } catch (Exception ignored) {
 
-                            assert channel != null;
-                            ByteBuf existingData = (ByteBuf) new ElbFrameDecoder().decode(channel.pipeline().lastContext(), channel, buf);
-                            existingData.skipBytes(1);
-
-                            ByteBuf frame = Unpooled.buffer(existingData.readableBytes() + uniqueIdBytes.length + 1);
-
-                            frame.writeByte(ElbBaseProtocolDecoder.MSG_START);
-                            frame.writeBytes(uniqueIdBytes);
-
-                            frame.writeBytes(existingData);
-                            ElbBaseProtocol elbBaseProtocol = new ElbBaseProtocol(getConfig());
-
-                            ElbBaseProtocolDecoder elbBaseProtocolDecoder = new ElbBaseProtocolDecoder(elbBaseProtocol);
-                            elbBaseProtocolDecoder.setDeviceId(deviceSession.getDeviceId());
-                            elbBaseProtocolDecoder.decodeInternal(frame, position, storage, deviceSession);
-
-
-                        }
-                        if (sinNumber == 237) {
-
-
-                            JsonObject payload = message.getJsonObject("Payload");
-                            JsonArray fields = null;
-                            try {
-                                fields = payload.getJsonArray("Fields");
-                            } catch (Exception ignored) {
-
-                            }
-                            if (fields != null) {
-                                for (int j = 0; j < fields.size(); j++) {
-                                    JsonObject field = fields.getJsonObject(j);
-                                    String value = field.getString("Value");
-                                    switch (field.getString("Name").toLowerCase()) {
-                                        case "eventtime":
-                                            position.setDeviceTime(new Date(Long.parseLong(value) * 1000));
-                                            break;
-                                        case "latitude":
-                                            position.setLatitude(Integer.parseInt(value) / 60000.0);
-                                            break;
-                                        case "longitude":
-                                            position.setLongitude(Integer.parseInt(value) / 60000.0);
-                                            break;
-                                        case "speed":
-                                            position.setSpeed(UnitsConverter.knotsFromKph(Integer.parseInt(value)));
-                                            break;
-                                        case "heading":
-                                            int heading = Integer.parseInt(value);
-                                            position.setCourse(heading <= 360 ? heading : 0);
-                                            break;
-                                        default:
-                                            break;
+                                }
+                                if (fields != null) {
+                                    for (int j = 0; j < fields.size(); j++) {
+                                        JsonObject field = fields.getJsonObject(j);
+                                        String value = field.getString("Value");
+                                        switch (field.getString("Name").toLowerCase()) {
+                                            case "eventtime":
+                                                position.setDeviceTime(new Date(Long.parseLong(value) * 1000));
+                                                break;
+                                            case "latitude":
+                                                position.setLatitude(Integer.parseInt(value) / 60000.0);
+                                                break;
+                                            case "longitude":
+                                                position.setLongitude(Integer.parseInt(value) / 60000.0);
+                                                break;
+                                            case "speed":
+                                                position.setSpeed(UnitsConverter.knotsFromKph(Integer.parseInt(value)));
+                                                break;
+                                            case "heading":
+                                                int heading = Integer.parseInt(value);
+                                                position.setCourse(heading <= 360 ? heading : 0);
+                                                break;
+                                            default:
+                                                break;
+                                        }
                                     }
                                 }
                             }
-                        }
-                        if (position.getLatitude() != 0 && position.getLongitude() != 0) {
-                            position.setValid(true);
-                            position.setFixTime(position.getDeviceTime());
-                        } else {
-                            getLastLocation(position, position.getDeviceTime());
-                        }
+                            if (position.getLatitude() != 0 && position.getLongitude() != 0) {
+                                position.setValid(true);
+                                position.setFixTime(position.getDeviceTime());
+                            } else {
+                                getLastLocation(position, position.getDeviceTime());
+                            }
 
-                        positions.add(position);
+                            positions.add(position);
+                        }
 
                     }
-                    } catch (Exception e) {
-                    return null;
+                    } catch (Exception ignored) {
                 }
 
             }

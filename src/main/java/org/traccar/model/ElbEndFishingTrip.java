@@ -146,12 +146,10 @@ public class ElbEndFishingTrip extends ElbMessage {
     }
 
     private boolean outdated;
-    @QueryIgnore
     public boolean getOutdated() {
         return outdated;
     }
 
-    @QueryIgnore
     public void setOutdated(boolean outdated) {
         this.outdated = outdated;
     }

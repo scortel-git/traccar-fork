@@ -112,7 +112,7 @@ public class NotificationManager {
 
         forwardEvent(event, position);
     }
-    private void updatePriorEvent(Event event, ElbMessage priorNotification) {
+    private void updateElbEvent(Event event, ElbMessage elbMessage) {
         try {
             event.setId(storage.addObject(event, new Request(new Columns.Exclude("id"))));
         } catch (StorageException error) {
@@ -140,15 +140,15 @@ public class NotificationManager {
                 .collect(Collectors.toUnmodifiableList());
 
         if (!notifications.isEmpty()) {
-            if (priorNotification != null && priorNotification.getAddress() == null && geocodeOnRequest && geocoder != null) {
-                priorNotification.setAddress(geocoder.getAddress(priorNotification.getLatitude(), priorNotification.getLongitude(), null));
+            if (elbMessage != null && elbMessage.getAddress() == null && geocodeOnRequest && geocoder != null) {
+                elbMessage.setAddress(geocoder.getAddress(elbMessage.getLatitude(), elbMessage.getLongitude(), null));
             }
 
             notifications.forEach(notification -> {
                 cacheManager.getNotificationUsers(notification.getId(), event.getDeviceId()).forEach(user -> {
                     for (String notificator : notification.getNotificatorsTypes()) {
                         try {
-                            notificatorManager.getNotificator(notificator).sendElb(notification, user, event, priorNotification);
+                            notificatorManager.getNotificator(notificator).sendElb(notification, user, event, elbMessage);
                         } catch (MessageException exception) {
                             LOGGER.warn("Notification failed", exception);
                         }
@@ -157,7 +157,7 @@ public class NotificationManager {
             });
         }
 
-        forwardEventElb(event, priorNotification);
+        forwardEventElb(event, elbMessage);
     }
 
     private void forwardEvent(Event event, Position position) {
@@ -219,7 +219,7 @@ public class NotificationManager {
             ElbMessage elbNotification = entry.getValue();
             try {
                 cacheManager.addDevice(event.getDeviceId());
-                updatePriorEvent(event, elbNotification);
+                updateElbEvent(event, elbNotification);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             } finally {

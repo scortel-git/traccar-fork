@@ -16,6 +16,7 @@
 package org.traccar.storage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.poi.ss.formula.functions.T;
 import org.traccar.config.Config;
 import org.traccar.model.BaseModel;
 import org.traccar.model.Device;
@@ -74,6 +75,23 @@ public class DatabaseStorage extends Storage {
                 builder.setValue(variable.getKey(), variable.getValue());
             }
             return builder.executeQuery(clazz);
+        } catch (SQLException e) {
+            throw new StorageException(e);
+        }
+    }
+    @Override
+    public <T> long getObjectsCount(Class<T> clazz, Request request) throws StorageException {
+        StringBuilder query = new StringBuilder("SELECT COUNT(*) ");
+
+        query.append(" FROM ").append(getStorageName(clazz));
+        query.append(formatCondition(request.getCondition()));
+        query.append(formatOrder(request.getOrder()));
+        try {
+            QueryBuilder builder = QueryBuilder.create(config, dataSource, objectMapper, query.toString());
+            for (Map.Entry<String, Object> variable : getConditionVariables(request.getCondition()).entrySet()) {
+                builder.setValue(variable.getKey(), variable.getValue());
+            }
+            return  builder.executeCount();
         } catch (SQLException e) {
             throw new StorageException(e);
         }
