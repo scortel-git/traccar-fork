@@ -60,7 +60,7 @@ public class DriverEventHandler extends BaseEventHandler {
         }
         return null;
     }
-    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage ElbMessage) {
+    protected Map<Event, ElbMessage> analyzePosition(ElbMessage ElbMessage) {
 
         return null;
     }

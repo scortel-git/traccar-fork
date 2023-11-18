@@ -16,6 +16,8 @@
  */
 package org.traccar.helper;
 
+import java.util.Objects;
+
 public final class DistanceCalculator {
 
     private DistanceCalculator() {
@@ -23,6 +25,41 @@ public final class DistanceCalculator {
 
     private static final double EQUATORIAL_EARTH_RADIUS = 6378.1370;
     private static final double DEG_TO_RAD = Math.PI / 180;
+
+    private static final String[] ORIENTATIONS = "N/S/E/W".split("/");
+
+    public static String decimalToDMS(double coord, String type) {
+
+        double mod = coord % 1;
+        int intPart = (int) coord;
+
+        String degrees = String.valueOf(intPart);
+
+        coord = mod * 60;
+        mod = coord % 1;
+        intPart = (int) coord;
+        if (intPart < 0)
+            intPart *= -1;
+
+        String minutes = String.valueOf(intPart);
+
+        coord = mod * 60;
+        intPart = (int) coord;
+        if (intPart < 0)
+            intPart *= -1;
+
+        String seconds = String.valueOf(intPart);
+        String output = Math.abs(Integer.parseInt(degrees)) + "°" + minutes + "'" + seconds + "\"";
+        String direction = null;
+        if (Objects.equals(type, "latitude")) {
+            direction = coord > 0 ? ORIENTATIONS[0] : ORIENTATIONS[1];
+        } else if (Objects.equals(type, "longitude")) {
+            direction = coord > 0 ? ORIENTATIONS[2] : ORIENTATIONS[3];
+        }
+        assert direction != null;
+        return output.concat(" ").concat(direction);
+    }
+
 
     public static double distance(double lat1, double lon1, double lat2, double lon2) {
         double dlong = (lon2 - lon1) * DEG_TO_RAD;

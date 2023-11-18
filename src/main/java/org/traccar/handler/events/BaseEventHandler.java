@@ -43,15 +43,9 @@ public abstract class BaseEventHandler extends BaseDataHandler {
         return position;
     }
 
-    protected ElbMessage handlePosition(ElbMessage priorNotification) {
-        Map<Event, ElbMessage> events = analyzePriorNotification(priorNotification);
-        if (events != null && !events.isEmpty()) {
-            notificationManager.updateElbEvents(events);
-        }
-        return priorNotification;
-    }
+
 
     protected abstract Map<Event, Position> analyzePosition(Position position);
-    protected abstract Map<Event, ElbMessage> analyzePriorNotification(ElbMessage priorNotification);
+    protected abstract Map<Event, ElbMessage> analyzePosition(ElbMessage elbMessage);
 
 }

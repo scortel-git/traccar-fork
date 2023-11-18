@@ -15,7 +15,9 @@
  */
 package org.traccar.api.resource;
 
+import jakarta.annotation.Nonnull;
 import jakarta.inject.Inject;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -24,13 +26,11 @@ import jakarta.ws.rs.core.StreamingOutput;
 import org.traccar.api.BaseResource;
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.helper.model.PriorNotificationUtil;
-import org.traccar.model.Device;
-import org.traccar.model.Position;
-import org.traccar.model.PriorNotification;
-import org.traccar.model.UserRestrictions;
+import org.traccar.model.*;
 import org.traccar.reports.CsvExportProvider;
 import org.traccar.reports.GpxExportProvider;
 import org.traccar.reports.KmlExportProvider;
+import org.traccar.reports.PriorNotificationCsvExportProvider;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
@@ -38,81 +38,105 @@ import org.traccar.storage.query.Request;
 
 import java.util.*;
 
-@Path("prior-notifications")
+@Path("prior-notification")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class PriorNotificationResource extends BaseResource {
 
-    @Inject
-    private KmlExportProvider kmlExportProvider;
 
     @Inject
-    private CsvExportProvider csvExportProvider;
+    private PriorNotificationCsvExportProvider csvExportProvider;
 
-    @Inject
-    private GpxExportProvider gpxExportProvider;
 
     @GET
-    public Collection<PriorNotification> getJson(
+    public Collection<ElbEndFishingTrip> getJson(
             @QueryParam("deviceId") long deviceId,
-            @QueryParam("id") List<Long> priorNotificationsIds,
+            @QueryParam("id") List<Long> endFishingTripsIds,
             @QueryParam("from") Date from,
-            @QueryParam("to") Date to)
+            @QueryParam("to") Date to,
+            @QueryParam("isNotValid") boolean isNotValid
+    )
             throws StorageException {
-        if (!priorNotificationsIds.isEmpty()) {
-            var priorNotifications = new ArrayList<PriorNotification>();
-            for (long prioNotificationId : priorNotificationsIds) {
-                PriorNotification priorNotification = storage.getObject(PriorNotification.class, new Request(
+        if (!endFishingTripsIds.isEmpty()) {
+            var endFishingTrips = new ArrayList<ElbEndFishingTrip>();
+            for (long prioNotificationId : endFishingTripsIds) {
+                ElbEndFishingTrip elbEndFishingTrip = storage.getObject(ElbEndFishingTrip.class, new Request(
                         new Columns.All(), new Condition.Equals("id", prioNotificationId)));
-                permissionsService.checkPermission(Device.class, getUserId(), priorNotification.getDeviceId());
-                priorNotifications.add(priorNotification);
+                permissionsService.checkPermission(Device.class, getUserId(), elbEndFishingTrip.getDeviceId());
+                endFishingTrips.add(elbEndFishingTrip);
             }
-            return priorNotifications;
+            return endFishingTrips;
         } else if (deviceId > 0) {
             permissionsService.checkPermission(Device.class, getUserId(), deviceId);
             if (from != null && to != null) {
                 permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
                 return PriorNotificationUtil.getPriorNotifications(storage, deviceId, from, to);
             } else {
-                return storage.getObjects(PriorNotification.class, new Request(
-                        new Columns.All(), new Condition.LatestPositions(deviceId)));
+                if (isNotValid){
+                    return storage.getObjects(ElbEndFishingTrip.class, new Request(
+                            new Columns.All(),
+                            new Condition.And(
+                                            new Condition.Equals("deviceId", deviceId),
+                                            new Condition.Equals("outdated", false))
+                            )
+                    );
+                }
+                return storage.getObjects(ElbEndFishingTrip.class, new Request(
+                        new Columns.All(),
+                        new Condition.And(
+                                new Condition.And(
+                                        new Condition.Equals("deviceId", deviceId),
+                                        new Condition.Equals("outdated", false)),
+                                new Condition.Equals("valid", true)
+                        )
+                ));
+
             }
         } else {
             return PriorNotificationUtil.getLatestPriorNotifications(storage, getUserId());
         }
     }
-
-    @DELETE
-    public Response remove(
-            @QueryParam("deviceId") long deviceId,
-            @QueryParam("from") Date from, @QueryParam("to") Date to) throws StorageException {
-        permissionsService.checkPermission(Device.class, getUserId(), deviceId);
-        permissionsService.checkRestriction(getUserId(), UserRestrictions::getReadonly);
-
-        var conditions = new LinkedList<Condition>();
-        conditions.add(new Condition.Equals("deviceId", deviceId));
-        conditions.add(new Condition.Between("fixTime", "from", from, "to", to));
-        storage.removeObject(PriorNotification.class, new Request(Condition.merge(conditions)));
-
-        return Response.status(Response.Status.NO_CONTENT).build();
-    }
-
-    @Path("prior-kml")
+    @Path("update")
     @GET
-    @Produces("application/vnd.google-earth.kml+xml")
-    public Response getKml(
-            @QueryParam("deviceId") long deviceId,
-            @QueryParam("from") Date from, @QueryParam("to") Date to) throws StorageException {
-        permissionsService.checkPermission(Device.class, getUserId(), deviceId);
-        StreamingOutput stream = output -> {
-            try {
-                kmlExportProvider.generate(output, deviceId, from, to);
-            } catch (StorageException e) {
-                throw new WebApplicationException(e);
+    public Response getJson(
+            @QueryParam("id") List<Long> endFishingTripsIds,
+            @DefaultValue("-1")
+            @QueryParam("valid") int valid
+
+            )throws StorageException {
+       if (permissionsService.notAdmin(getUserId())) {
+           return Response.status(Response.Status.FORBIDDEN).build();
+       }
+       boolean isValid;
+       if (valid == 1) {
+           isValid = true;
+       } else if (valid == 0) {
+           isValid = false;
+       }
+       else {
+           return Response.status(Response.Status.BAD_REQUEST).build();
+       }
+
+        var endFishingTrips = new ArrayList<ElbEndFishingTrip>();
+        if (!endFishingTripsIds.isEmpty()) {
+            for (long prioNotificationId : endFishingTripsIds) {
+                ElbEndFishingTrip elbEndFishingTrip = storage.getObject(ElbEndFishingTrip.class, new Request(
+                        new Columns.All(), new Condition.Equals("id", prioNotificationId)));
+                endFishingTrips.add(elbEndFishingTrip);
             }
-        };
-        return Response.ok(stream)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=prior-notifications.kml").build();
+        }
+        if (!endFishingTrips.isEmpty()) {
+            for (ElbEndFishingTrip trip : endFishingTrips) {
+                trip.setValid(isValid);
+                storage.updateObject(trip, new Request(
+                        new Columns.Exclude("id"),
+                        new Condition.Equals("id", trip.getId()))
+                );
+            }
+        }
+
+        return Response.status(Response.Status.ACCEPTED).build();
+
     }
 
     @Path("csv")
@@ -131,24 +155,6 @@ public class PriorNotificationResource extends BaseResource {
         };
         return Response.ok(stream)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=prior-notifications.csv").build();
-    }
-
-    @Path("prior-gpx")
-    @GET
-    @Produces("application/gpx+xml")
-    public Response getGpx(
-            @QueryParam("deviceId") long deviceId,
-            @QueryParam("from") Date from, @QueryParam("to") Date to) throws StorageException {
-        permissionsService.checkPermission(Device.class, getUserId(), deviceId);
-        StreamingOutput stream = output -> {
-            try {
-                gpxExportProvider.generate(output, deviceId, from, to);
-            } catch (StorageException e) {
-                throw new WebApplicationException(e);
-            }
-        };
-        return Response.ok(stream)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=prior-notifications.gpx").build();
     }
 
 }

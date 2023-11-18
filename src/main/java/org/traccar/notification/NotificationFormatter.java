@@ -73,19 +73,15 @@ public class NotificationFormatter {
     public NotificationMessage formatELBMessage(User user, Event event, ElbMessage elbMessage, String templatePath) {
         Server server = cacheManager.getServer();
         Device device = cacheManager.getObject(Device.class, event.getDeviceId());
-        Position position = cacheManager.getPosition(elbMessage.getPositionId());
 
         VelocityContext velocityContext = textTemplateFormatter.prepareContext(server, user);
 
         velocityContext.put("device", device);
         velocityContext.put("event", event);
-        if (position != null) {
-            velocityContext.put("position", position);
-            velocityContext.put("speedUnit", UserUtil.getSpeedUnit(server, user));
-            velocityContext.put("distanceUnit", UserUtil.getDistanceUnit(server, user));
-            velocityContext.put("volumeUnit", UserUtil.getVolumeUnit(server, user));
-            velocityContext.put("elbObject", elbMessage);
-        }
+        velocityContext.put("speedUnit", UserUtil.getSpeedUnit(server, user));
+        velocityContext.put("distanceUnit", UserUtil.getDistanceUnit(server, user));
+        velocityContext.put("volumeUnit", UserUtil.getVolumeUnit(server, user));
+        velocityContext.put("elbObject", elbMessage);
         if (event.getGeofenceId() != 0) {
             velocityContext.put("geofence", cacheManager.getObject(Geofence.class, event.getGeofenceId()));
         }
