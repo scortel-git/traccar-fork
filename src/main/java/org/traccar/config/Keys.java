@@ -1073,6 +1073,14 @@ public final class Keys {
             List.of(KeyType.CONFIG, KeyType.USER));
 
     /**
+     * Flag to enable ignition use for trips calculation.
+     */
+    public static final ConfigKey<Boolean> MAIL_OVERWRITE_ENABLE = new BooleanConfigKey(
+            "mail.overwrite.enable",
+            List.of(KeyType.CONFIG, KeyType.SERVER),
+            false);
+
+    /**
      * The personal name for the email from address.
      */
     public static final ConfigKey<String> MAIL_SMTP_FROM_NAME = new StringConfigKey(

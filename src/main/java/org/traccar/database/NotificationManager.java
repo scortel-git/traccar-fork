@@ -112,7 +112,7 @@ public class NotificationManager {
 
         forwardEvent(event, position);
     }
-    private void updateElbEvent(Event event, ElbMessage elbMessage) {
+    private void updateEvent(Event event, ElbMessage elbMessage) {
         try {
             event.setId(storage.addObject(event, new Request(new Columns.Exclude("id"))));
         } catch (StorageException error) {
@@ -157,7 +157,7 @@ public class NotificationManager {
             });
         }
 
-        forwardEventElb(event, elbMessage);
+        forwardEvent(event, elbMessage);
     }
 
     private void forwardEvent(Event event, Position position) {
@@ -179,9 +179,10 @@ public class NotificationManager {
             });
         }
     }
-    private void forwardEventElb(Event event, ElbMessage elbNotification) {
+    private void forwardEvent(Event event, ElbMessage elbNotification) {
         if (eventForwarder != null) {
             EventData eventData = new EventData();
+
             eventData.setEvent(event);
             eventData.setElbNotification(elbNotification);
             eventData.setDevice(cacheManager.getObject(Device.class, event.getDeviceId()));
@@ -200,31 +201,26 @@ public class NotificationManager {
     }
 
     public void updateEvents(Map<Event, Position> events) {
-        for (Entry<Event, Position> entry : events.entrySet()) {
-            Event event = entry.getKey();
-            Position position = entry.getValue();
-            try {
-                cacheManager.addDevice(event.getDeviceId());
-                updateEvent(event, position);
-            } catch (StorageException e) {
-                throw new RuntimeException(e);
-            } finally {
-                cacheManager.removeDevice(event.getDeviceId());
+
+            for (Entry<Event, Position> entry : events.entrySet()) {
+                Event event = entry.getKey();
+                Position position = entry.getValue();
+                try {
+                    cacheManager.addDevice(event.getDeviceId());
+
+                    if (position != null && position.getElbObject() != null) {
+                        updateEvent(event, position.getElbObject());
+                    }
+                    else {
+                        updateEvent(event, position);
+                    }
+                } catch (StorageException e) {
+                    throw new RuntimeException(e);
+                } finally {
+                    cacheManager.removeDevice(event.getDeviceId());
+                }
             }
         }
-    }
-    public void updateElbEvents(Map<Event, ElbMessage> events) {
-        for (Entry<Event, ElbMessage> entry : events.entrySet()) {
-            Event event = entry.getKey();
-            ElbMessage elbNotification = entry.getValue();
-            try {
-                cacheManager.addDevice(event.getDeviceId());
-                updateElbEvent(event, elbNotification);
-            } catch (StorageException e) {
-                throw new RuntimeException(e);
-            } finally {
-                cacheManager.removeDevice(event.getDeviceId());
-            }
-        }
-    }
+
+
 }

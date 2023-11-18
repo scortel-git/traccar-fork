@@ -132,7 +132,16 @@ public final class SmtpMailManager implements MailManager {
             }
         }
 
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(user.getEmail()));
+        message.addRecipient(Message.RecipientType.TO,
+                new InternetAddress(user.getString("overwriteMail", user.getEmail())));
+        if (user.getManager() || user.getAdministrator()){
+            String mails = user.getString("mailCc", null);
+            if (mails != null) {
+                message.addRecipients(Message.RecipientType.CC,
+                        InternetAddress.parse(mails));
+            }
+
+        }
         message.setSubject(subject);
         message.setSentDate(new Date());
 

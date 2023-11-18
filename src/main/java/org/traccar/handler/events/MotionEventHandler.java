@@ -82,7 +82,7 @@ public class MotionEventHandler extends BaseEventHandler {
         }
         return state.getEvent() != null ? Collections.singletonMap(state.getEvent(), position) : null;
     }
-    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
+    protected Map<Event, ElbMessage> analyzePosition(ElbMessage elbMessage) {
 
         return null;
     }

@@ -74,7 +74,7 @@ public class FuelEventHandler extends BaseEventHandler {
 
         return null;
     }
-    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
+    protected Map<Event, ElbMessage> analyzePosition(ElbMessage elbMessage) {
 
         return null;
     }

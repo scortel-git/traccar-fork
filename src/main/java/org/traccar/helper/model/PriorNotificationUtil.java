@@ -51,9 +51,9 @@ public final class PriorNotificationUtil {
         return distance;
     }
 
-    public static List<PriorNotification> getPriorNotifications(
+    public static List<ElbEndFishingTrip> getPriorNotifications(
             Storage storage, long deviceId, Date from, Date to) throws StorageException {
-        return storage.getObjects(PriorNotification.class, new Request(
+        return storage.getObjects( ElbEndFishingTrip.class, new Request(
                 new Columns.All(),
                 new Condition.And(
                         new Condition.Equals("deviceId", deviceId),
@@ -61,14 +61,14 @@ public final class PriorNotificationUtil {
                 new Order("fixTime")));
     }
 
-    public static List<PriorNotification> getLatestPriorNotifications(Storage storage, long userId) throws StorageException {
+    public static List<ElbEndFishingTrip> getLatestPriorNotifications(Storage storage, long userId) throws StorageException {
         var devices = storage.getObjects(Device.class, new Request(
                 new Columns.Include("id"),
                 new Condition.Permission(User.class, userId, Device.class)));
 
         var deviceIds = devices.stream().map(BaseModel::getId).collect(Collectors.toUnmodifiableSet());
 
-        var priorNotifications = storage.getObjects(PriorNotification.class, new Request(
+        var priorNotifications = storage.getObjects(ElbEndFishingTrip.class, new Request(
                 new Columns.All(),
                 new Condition.Permission(User.class, userId, Device.class)));
 

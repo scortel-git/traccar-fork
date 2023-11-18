@@ -48,7 +48,7 @@ public class MediaEventHandler extends BaseEventHandler {
                 })
                 .collect(Collectors.toMap(event -> event, event -> position));
     }
-    protected Map<Event, ElbMessage> analyzePriorNotification(ElbMessage elbMessage) {
+    protected Map<Event, ElbMessage> analyzePosition(ElbMessage elbMessage) {
 
         return null;
     }
