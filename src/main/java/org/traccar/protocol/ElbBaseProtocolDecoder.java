@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 import jakarta.xml.bind.DatatypeConverter;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.Protocol;
+import org.traccar.helper.DateUtil;
 import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
 import org.traccar.storage.Storage;
@@ -157,7 +158,10 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 trip.setEstimatedArriveTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
                 trip.setLandingPortId(buf.readShortLE());
                 trip.setEndFishingTripTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
-                trip.setTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
+                trip.setTime(
+                        new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000)
+                );
+
                 trip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                 trip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                 trip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);

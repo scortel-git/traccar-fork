@@ -45,17 +45,6 @@
     <entry key="database.saveOriginal config">false</entry>
     <entry key='database.changelog'>./schema/changelog-master.xml</entry>
 
-    <entry key='mail.smtp.host'>scortel.com</entry>
-    <entry key='mail.smtp.port'>993</entry>
-    <entry key='mail.smtp.starttls.enable'>true</entry>
-    <entry key='mail.smtp.port'>465</entry>
-    <entry key='mail.smtp.ssl.enable'>true</entry>
-    <entry key='mail.smtp.from'>no-reply@scortel.com</entry>
-    <entry key='mail.smtp.auth'>true</entry>
-    <entry key='mail.smtp.username'>no-reply@scortel.com</entry>
-    <entry key='mail.smtp.password'>A5yks$So0fav</entry>
-
-
     <!--    <entry key='gps103.port'>5001</entry>-->
 <!--    <entry key='tk103.port'>5002</entry>-->
 <!--    <entry key='gl100.port'>5003</entry>-->
