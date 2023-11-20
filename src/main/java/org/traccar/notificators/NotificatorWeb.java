@@ -46,6 +46,7 @@ public final class NotificatorWeb implements Notificator {
         copy.setGeofenceId(event.getGeofenceId());
         copy.setMaintenanceId(event.getMaintenanceId());
         copy.getAttributes().putAll(event.getAttributes());
+        copy.set("priorId", elbMessage.getId());
 
         var message = notificationFormatter.formatELBMessage(user, event, elbMessage, "short");
         copy.set("message", message.getBody());

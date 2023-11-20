@@ -85,6 +85,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             if (!ignoreAlert) {
                 Event event = new Event(Event.TYPE_ELB_MESSAGE, position);
                 event.set(Position.KEY_EVENT, (String) alarm);
+                event.set("priorId", position.getElbObject().getId());
                 return Collections.singletonMap(event, position);
             }
         }
@@ -127,8 +128,13 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         assert device != null;
 
 
-        entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
-        connectionManager.updateElbEntity(true, entity);
+        try {
+            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+        }finally {
+            connectionManager.updateElbEntity(true, entity);
+        }
+
 
 
     }

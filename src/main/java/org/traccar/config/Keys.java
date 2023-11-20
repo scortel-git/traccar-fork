@@ -19,6 +19,7 @@ import java.util.List;
 
 public final class Keys {
 
+
     private Keys() {
     }
 
@@ -268,6 +269,11 @@ public final class Keys {
     public static final ConfigKey<String> ORBCOMM_ACCESS_ID = new StringConfigKey(
             "orbcomm.accessId",
             List.of(KeyType.CONFIG));
+
+    public static final ConfigKey<Integer> ORBCOMM_START_DELAY = new IntegerConfigKey(
+            "backToTheFutureInSeconds",
+            List.of(KeyType.CONFIG)
+    );
 
     /**
      * ORBCOMM API password.

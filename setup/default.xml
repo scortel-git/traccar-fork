@@ -310,14 +310,13 @@
 <entry key='protocols.enable'>osmand,orbcomm,elbbase</entry>
 <entry key='elbbase.port'>6666</entry>
 <entry key='osmand.port'>5055</entry>
-<!--<entry key='orbcomm.address'>isatdatapro.orbcomm.com</entry>-->
-<!--<entry key='orbcomm.port'>443</entry>-->
-<!--<entry key='orbcomm.ssl'>true</entry>-->
-<!--<entry key='orbcomm.interval'>20</entry>-->
-<!--<entry key='orbcomm.devices'>01435479SKY4EF0,01435427SKY7DEC</entry>-->
-<!--<entry key='orbcomm.accessId'>70001422</entry>-->
-<!--<entry key='orbcomm.password'>SCIARA</entry>-->
-
-
-
+<entry key='orbcomm.address'>isatdatapro.orbcomm.com</entry>
+<entry key='orbcomm.port'>443</entry>
+<entry key='orbcomm.ssl'>true</entry>
+<entry key='orbcomm.interval'>10</entry>
+<entry key='orbcomm.devices'>01435479SKY4EF0,01435427SKY7DEC</entry>
+<entry key='orbcomm.accessId'>70001422</entry>
+<entry key='orbcomm.password'>SCIARA</entry>
+<entry key='orbcomm.backToTheFutureInSeconds'>604800</entry>
+<!--86400 * day-->
 </properties>

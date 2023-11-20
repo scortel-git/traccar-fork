@@ -1,2 +1,4 @@
 #set($subject = "Prior Notification")
-Prior Notification
+[PN] \n
+$device.name \n
+$elbObject.uniqueNumber

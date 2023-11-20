@@ -132,17 +132,27 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 position.set("MSG_END_FISHING_TRIP", DatatypeConverter.printHexBinary(rawData.array()));
 
                 Device device = null;
+                long driverId = -1;
                 try {
                     device = database.getObject(Device.class, new Request(
                             new Columns.All(), new Condition.Equals("uniqueId", deviceUniqueId)));
                 } catch (StorageException ignore) {
                 }
+                try {
+                    List<Permission> permissions = database.getPermissions(Device.class, Driver.class);
+                    if (!permissions.isEmpty()) {
+                        driverId = permissions.get(0).getPropertyId();
+                    }
+
+                } catch (StorageException ignored) {
+
+                }
 
                 int counter = 1;
-
                 assert device != null;
                 Map<String, Object> attributes = device.getAttributes();
                 ElbEndFishingTrip trip = new ElbEndFishingTrip();
+                trip.setDriverId(driverId);
                 trip.setProtocol("endFishingTrip");
                 trip.setEstimatedArriveTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
                 trip.setLandingPortId(buf.readShortLE());
@@ -168,6 +178,10 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 trip.setValid(true);
                 trip.setOutdated(false);
                 trip.setDeviceId(deviceId);
+                if (driverId > 0) {
+                    trip.setDriverId(driverId);
+                }
+
                 String cfr = attributes.get("cfr").toString();
 
                 List<ElbEndFishingTrip> oldElbEndFishingTrips = null;
@@ -183,8 +197,15 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 } catch (StorageException ignore) {
                 }
                 assert oldElbEndFishingTrips != null;
+                boolean isDublicated = false;
+
                 if (!oldElbEndFishingTrips.isEmpty()) {
                     for (ElbEndFishingTrip previous : oldElbEndFishingTrips) {
+                        if (Objects.equals(trip.getDeviceTime().toString(), previous.getDeviceTime().toString())){
+                            isDublicated = true;
+                            break;
+                        }
+
                         try {
                             trip.setUniqueNumber(previous.getUniqueNumber());
                             previous.setOutdated(true);
@@ -199,34 +220,42 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     String uniqueNumber = !Objects.equals(cfr, null) ? cfr : device.getUniqueId();
                     long elbEndFishingTripCounts = -1;
                     try {
+                        var conditions = new LinkedList<Condition>();
+                        conditions.add(new Condition.Equals("deviceId", device.getId()));
+                        conditions.add(new Condition.Equals("outdated", false));
+
                         elbEndFishingTripCounts = database.getObjectsCount(ElbEndFishingTrip.class,
                                 new Request(
-                                        new Columns.All(), new Condition.And(
-                                        new Condition.Equals("deviceId", device.getId()),
-                                        new Condition.Equals("outdated", false)
-                                )
+                                        new Columns.All(),
+                                        Condition.merge(conditions)
                                 )
                         );
                     } catch (StorageException ignore) {
+
                     }
 
                     trip.setUniqueNumber(
                             uniqueNumber + "-" + String.format(
-                                    "%03d",
+                                    "%02d",
                                     elbEndFishingTripCounts > 0 ?
                                             elbEndFishingTripCounts + counter
                                             : counter));
                 }
-                position.setProtocol(getProtocolName());
+
                 position.setLatitude(trip.getLatitude());
                 position.setLongitude(trip.getLongitude());
                 position.setAltitude(0.00);
                 position.setTime(trip.getDeviceTime());
                 position.setSpeed(trip.getSpeed());
                 position.setCourse(trip.getCourse());
-                position.set(Position.KEY_EVENT, Position.KEY_ELB_NOTIFICATION);
-                position.setElbObject(trip);
-                position.setValid(true);
+                if (!isDublicated) {
+                    position.set(Position.KEY_EVENT, Position.KEY_ELB_NOTIFICATION);
+                    position.setElbObject(trip);
+                    position.setValid(true);
+                }
+                else {
+                    position.setValid(false);
+                }
                 break;
             case MSG_ERROR_MODULE_ID:
                 position.set("MSG_ERROR_MODULE_ID", DatatypeConverter.printHexBinary(rawData.array()));

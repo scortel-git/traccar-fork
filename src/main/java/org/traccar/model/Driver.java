@@ -31,6 +31,8 @@ public class Driver extends ExtendedModel {
         this.name = name;
     }
 
+
+
     private String uniqueId;
 
     public String getUniqueId() {
