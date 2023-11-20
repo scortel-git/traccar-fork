@@ -34,6 +34,13 @@ public class ElbMessage extends ExtendedModel {
     public String getAddress() {
         return address;
     }
+
+    private long driverId;
+
+    public void setDriverId(long driverId) {
+        this.driverId = driverId;
+    }
+    public long getDriverId() {return driverId; }
     private double latitude;
 
     public double getLatitude() {

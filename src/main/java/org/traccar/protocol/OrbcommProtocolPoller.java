@@ -32,10 +32,13 @@ import org.traccar.config.Keys;
 import java.net.SocketAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
 public class OrbcommProtocolPoller extends BaseProtocolPoller {
+    private static int delay;
     private final String accessId;
     private final String password;
     private final String host;
@@ -44,9 +47,11 @@ public class OrbcommProtocolPoller extends BaseProtocolPoller {
         this.startTime = startTime;
     }
 
+
+
     public OrbcommProtocolPoller(Protocol protocol, Config config) {
         super(config.getLong(Keys.PROTOCOL_INTERVAL.withPrefix(protocol.getName())));
-
+        delay = config.getInteger(Keys.ORBCOMM_START_DELAY, 0);
         accessId = config.getString(Keys.ORBCOMM_ACCESS_ID);
         password = config.getString(Keys.ORBCOMM_PASSWORD);
         host = config.getString(Keys.PROTOCOL_ADDRESS.withPrefix(protocol.getName()));
@@ -61,6 +66,11 @@ public class OrbcommProtocolPoller extends BaseProtocolPoller {
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        if (delay > 0) {
+            Calendar newTime = Calendar.getInstance();
+            newTime.add(Calendar.SECOND, - delay);
+            setStartTime(newTime.getTime());
+        }
         encoder.addParam("start_utc", dateFormat.format(startTime));
 
         HttpRequest request = new DefaultFullHttpRequest(

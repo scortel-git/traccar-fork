@@ -57,6 +57,8 @@ public class PriorNotificationResource extends BaseResource {
             @QueryParam("isNotValid") boolean isNotValid
     )
             throws StorageException {
+        var conditions = new LinkedList<Condition>();
+
         if (!endFishingTripsIds.isEmpty()) {
             var endFishingTrips = new ArrayList<ElbEndFishingTrip>();
             for (long prioNotificationId : endFishingTripsIds) {
@@ -72,23 +74,19 @@ public class PriorNotificationResource extends BaseResource {
                 permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
                 return PriorNotificationUtil.getPriorNotifications(storage, deviceId, from, to);
             } else {
+                conditions.add(new Condition.Equals("deviceId", deviceId));
+                conditions.add(new Condition.Equals("outdated", false));
                 if (isNotValid){
                     return storage.getObjects(ElbEndFishingTrip.class, new Request(
                             new Columns.All(),
-                            new Condition.And(
-                                            new Condition.Equals("deviceId", deviceId),
-                                            new Condition.Equals("outdated", false))
-                            )
-                    );
+                            Condition.merge(conditions)
+                            ));
                 }
+                conditions.add(new Condition.Equals("valid", true));
+
                 return storage.getObjects(ElbEndFishingTrip.class, new Request(
                         new Columns.All(),
-                        new Condition.And(
-                                new Condition.And(
-                                        new Condition.Equals("deviceId", deviceId),
-                                        new Condition.Equals("outdated", false)),
-                                new Condition.Equals("valid", true)
-                        )
+                        Condition.merge(conditions)
                 ));
 
             }

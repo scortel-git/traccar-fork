@@ -92,6 +92,10 @@ public class NotificationFormatter {
         if (driverUniqueId != null) {
             velocityContext.put("driver", cacheManager.findDriverByUniqueId(device.getId(), driverUniqueId));
         }
+        long driverId = elbMessage.getDriverId();
+        if (driverId > 0) {
+            velocityContext.put("driver", cacheManager.findDriverById(device.getId(), driverId));
+        }
 
         return textTemplateFormatter.formatMessage(velocityContext, event.getType(), templatePath);
     }

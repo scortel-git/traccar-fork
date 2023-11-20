@@ -145,6 +145,12 @@ public class ElbEndFishingTrip extends ElbMessage {
         setDeviceTime(time);
         setFixTime(time);
     }
+    private long driverId;
+
+    public void setDriverId(long driverId) {
+        this.driverId = driverId;
+    }
+    public long getDriverId() {return driverId; }
 
     private boolean outdated;
     public boolean getOutdated() {

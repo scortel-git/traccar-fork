@@ -38,6 +38,11 @@ public interface Condition {
             super(column, "=", column, value);
         }
     }
+    class NotEquals extends Compare {
+        public NotEquals(String column, Object value) {
+            super(column, "!=", column, value);
+        }
+    }
 
     class Compare implements Condition {
         private final String column;
