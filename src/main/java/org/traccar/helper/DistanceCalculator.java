@@ -49,7 +49,7 @@ public final class DistanceCalculator {
             intPart *= -1;
 
         String seconds = String.valueOf(intPart);
-        String output = Math.abs(Integer.parseInt(degrees)) + "°" + minutes + "'" + seconds + "\"";
+        String output = Math.abs(Integer.parseInt(degrees)) + "° " + minutes + "' " + seconds + "\"";
         String direction = null;
         if (Objects.equals(type, "latitude")) {
             direction = coord > 0 ? ORIENTATIONS[0] : ORIENTATIONS[1];

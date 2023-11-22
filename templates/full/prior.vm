@@ -71,19 +71,22 @@
         <td colSpan="3">x</td>
         <td colSpan="3">Дата:</td>
 
-        <td colSpan="3">$dateTool.format('yyyy-M-d',$elbObject.estimatedArriveTime)</td>
+        <td colSpan="3">$dateTool.format('yyyy-MM-dd',$elbObject.estimatedArriveTime)</td>
     </tr>
     <tr>
         <td colSpan="3">Пристанище на отпътуването:</td>
         <td colSpan="3">x</td>
         <td colSpan="3">Пристанище на разтоварване:</td>
-        <td colSpan="3">$elbObject.landingPortId</td>
+        <td colSpan="3">$elbObject.landingPortCode</td>
     </tr>
     <tr>
         <td colSpan="3">Координати на залагане на мрежите:</td>
-        <td colSpan="3">$elbObject.latitude, $elbObject.longitude</td>
+        <td colSpan="3">
+            $elbObject.attributes.formattedLatitude  <br/>
+            $elbObject.attributes.formattedLongitude
+        </td>
         <td colSpan="3">Очакван час на пристигане:</td>
-        <td colSpan="3">$dateTool.format('H:m:s',$elbObject.estimatedArriveTime)</td>
+        <td colSpan="3">$dateTool.format('HH:mm:ss',$elbObject.estimatedArriveTime)</td>
     </tr>
     <tr>
         <td colSpan="12" className="no_border"></td>
