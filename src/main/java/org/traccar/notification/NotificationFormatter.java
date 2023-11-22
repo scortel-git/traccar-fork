@@ -24,6 +24,8 @@ import org.traccar.session.cache.CacheManager;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
+import static org.traccar.helper.DistanceCalculator.decimalToDMS;
+
 @Singleton
 public class NotificationFormatter {
 
@@ -75,7 +77,8 @@ public class NotificationFormatter {
         Device device = cacheManager.getObject(Device.class, event.getDeviceId());
 
         VelocityContext velocityContext = textTemplateFormatter.prepareContext(server, user);
-
+        elbMessage.set("formattedLatitude",(decimalToDMS(elbMessage.getLatitude(), "latitude")));
+        elbMessage.set("formattedLongitude",(decimalToDMS(elbMessage.getLongitude(), "longitude")));
         velocityContext.put("device", device);
         velocityContext.put("event", event);
         velocityContext.put("speedUnit", UserUtil.getSpeedUnit(server, user));

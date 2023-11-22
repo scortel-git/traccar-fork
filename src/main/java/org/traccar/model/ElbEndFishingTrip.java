@@ -54,6 +54,18 @@ public class ElbEndFishingTrip extends ElbMessage {
     public void setLandingPortId(long landingPortId) {
         this.landingPortId = landingPortId;
     }
+    @JsonIgnore
+    @QueryIgnore
+    public String getLandingPortCode() {
+        return landingPortCode;
+    }
+    @JsonIgnore
+    @QueryIgnore
+    public void setLandingPortCode(String landingPortCode) {
+        this.landingPortCode = landingPortCode;
+    }
+
+    private String landingPortCode;
     private Date estimatedArriveTime;
     public Date getEstimatedArriveTime() {
         return estimatedArriveTime;

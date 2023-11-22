@@ -20,6 +20,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.FullHttpResponse;
 import jakarta.inject.Inject;
+import jakarta.xml.bind.DatatypeConverter;
 import org.traccar.BasePipelineFactory;
 import org.traccar.BaseProtocolDecoder;
 import org.traccar.session.DeviceSession;
@@ -101,13 +102,16 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
         try {
             if (channel != null && !json.getString("NextStartUTC").isEmpty() && !isFirstRun) {
-                poller = BasePipelineFactory.getHandler(channel.pipeline(), OrbcommProtocolPoller.class);
+                if (poller == null){
+                    poller = BasePipelineFactory.getHandler(channel.pipeline(), OrbcommProtocolPoller.class);
+
+                }
                 if (poller != null) {
                     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
                     poller.setStartTime(dateFormat.parse(json.getString("NextStartUTC")));
-
                 }
+
             }
 
         } catch (Exception e) {
@@ -135,6 +139,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                         Position position = new Position(getProtocolName());
                         position.setDeviceId(deviceSession.getDeviceId());
+                        position.set("messageId", message.getJsonNumber("ID").longValue());
 
                         DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -155,6 +160,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                                     byte byteValue = (byte) intValue;
                                     buf.writeByte(byteValue);
                                 }
+                                position.set("raw", DatatypeConverter.printHexBinary(buf.array()));
 
                                 position.set("mask", Integer.toHexString(data.getInt(4)));
 //                            position.set("raw", Arrays.toString(data.toArray()));
@@ -187,6 +193,11 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                                 }
 
+                                if (position.getString("duplicated", "false").equals("true")) {
+                                    position.setOutdated(true);
+                                }else {
+                                    position.setProtocol("elbtest");
+                                }
 
                             }
                             if (sinNumber == 237) {

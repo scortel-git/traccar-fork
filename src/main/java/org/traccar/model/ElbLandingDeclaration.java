@@ -16,6 +16,8 @@
 package org.traccar.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
@@ -24,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @StorageName("elb_landing_declaration")
-public class ElbLandingDeclaration extends Message {
+public class ElbLandingDeclaration extends ElbMessage {
 
     public ElbLandingDeclaration() {
     }
@@ -44,8 +46,42 @@ public class ElbLandingDeclaration extends Message {
     private double altitude; // value in meters
     private Network network;
     private List<Long> geofenceIds;
+    @JsonIgnore
+    @QueryIgnore
+    public List<Object> getCatches() {
+        return catches;
+    }
+    @JsonIgnore
+    @QueryIgnore
+    public void setCatches(List<Object> catches) throws JsonProcessingException {
+
+        this.catches = catches;
+        setFishes(new ObjectMapper().writeValueAsString(catches));
+
+    }
+
+    public String getFishes() {
+        return fishes;
+    }
+
+    public void setFishes(String fishes) {
+
+        this.fishes = fishes;
+    }
+
+    private String fishes;
 
 
+    private List<Object> catches;
+
+    private String tripNumber;
+    public String getTripNumber() {
+        return tripNumber;
+    }
+
+    public void setTripNumber(String tripNumber) {
+        this.tripNumber = tripNumber;
+    }
     public String getProtocol() {
         return protocol;
     }
