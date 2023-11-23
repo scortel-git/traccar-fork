@@ -1,0 +1,6 @@
+#FileLock
+#Thu Nov 23 15:49:41 EET 2023
+server=192.168.192.30\:41021
+hostName=traccar.tld
+method=file
+id=18bfc71806e25239515b6a5b5bb2a1d41c4678de242
