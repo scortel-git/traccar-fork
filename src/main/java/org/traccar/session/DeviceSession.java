@@ -32,6 +32,7 @@ public class DeviceSession {
     private final Protocol protocol;
     private final Channel channel;
     private final SocketAddress remoteAddress;
+    private Map<String, Object> attributes;
 
     public DeviceSession(
             long deviceId, String uniqueId, Protocol protocol, Channel channel, SocketAddress remoteAddress) {
@@ -44,6 +45,9 @@ public class DeviceSession {
 
     public long getDeviceId() {
         return deviceId;
+    }
+    public Map<String, Object> getAttributes() {
+        return get("attributes");
     }
 
     public String getUniqueId() {

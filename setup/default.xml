@@ -20,6 +20,7 @@
     <entry key='geocoder.key'>pk.689d849289c8c63708068b2ff1f63b2d</entry>
     <entry key='geocoder.onRequest'>false</entry>
     <entry key='geocoder.ignorePositions'>true</entry>
+    <entry key='notificator.types'>web,mail,command</entry>
 
 <!--logger.queries -->
     <entry key='logger.level'>info</entry>

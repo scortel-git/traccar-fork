@@ -69,7 +69,7 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
             }
             buf.writeByte(ETX);
         }catch (Exception ignored) {
-
+            int o = 1;
         }
 
 
@@ -78,7 +78,7 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ByteBuf buf) throws Exception {
 
-        if (buf.readableBytes() < 20) {
+        if (buf.readableBytes() < 4) {
             return null;
         }
         if (buf.getUnsignedByte(buf.readerIndex()) == 239) {
@@ -86,8 +86,34 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
             buf.readUnsignedByte();
         }
         buf = removePreEscape(buf);
-        if (buf.readableBytes() > 20) {
-            return buf;
+        if (buf.readableBytes() > 4) {
+            int inx = 0;
+            ByteBuf frame;
+            byte stx = buf.getByte(0); // STX
+            inx++;
+            byte seq = buf.getByte(1); // Sequence
+            inx++;
+            byte mask = buf.getByte(2);
+            inx++;
+            byte content = buf.getByte(3); // content
+            inx++;
+            switch (mask) {
+                case ElbBaseProtocolDecoder.MSG_END_FISHING_OPERATION:
+                    frame = Unpooled.buffer(buf.readableBytes() * 2);
+                    break;
+                case ElbBaseProtocolDecoder.MSG_LANDING_DECLARATION:
+                    inx += content;
+                    int additionalBufferSize =  buf.getByte(inx) * 500;
+                    frame = Unpooled.buffer(additionalBufferSize * 2 + buf.array().length);
+                    break;
+                default:
+                    frame = Unpooled.buffer(buf.array().length * 2);
+            }
+
+            frame.writeBytes(buf);
+
+//            TODO: Should increase buffer
+            return frame;
         }
 
         return null;

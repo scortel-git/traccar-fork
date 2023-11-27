@@ -18,6 +18,8 @@ package org.traccar.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.traccar.storage.QueryIgnore;
 
+import java.util.Date;
+
 public class ElbMessage extends ExtendedModel {
 
     private long positionId;
@@ -34,6 +36,16 @@ public class ElbMessage extends ExtendedModel {
     public String getAddress() {
         return address;
     }
+
+    public Date getFixTime() {
+        return fixTime;
+    }
+
+    public void setFixTime(Date fixTime) {
+        this.fixTime = fixTime;
+    }
+
+    private Date fixTime;
 
     private long driverId;
 
