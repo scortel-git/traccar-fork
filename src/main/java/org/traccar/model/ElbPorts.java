@@ -23,7 +23,7 @@ import java.util.HashMap;
 
 public class ElbPorts extends ExtendedModel {
 
-    private static final HashMap<Short, ElbPorts> elbPortsHashMap = new HashMap<Short, ElbPorts>() {{
+    public static final HashMap<Short, ElbPorts> elbPortsHashMap = new HashMap<Short, ElbPorts>() {{
         put((short) 1, new ElbPorts() {{ setCode("BGADB"); setCountry("BGR"); setName("Ada Bahcha"); setLatitude(43.12859); setLongitude(27.932804); }});
         put((short) 2, new ElbPorts() {{ setCode("BGAHE"); setCountry("BGR"); setName("Aheloy"); setLatitude(42.636665); setLongitude(27.652222); }});
         put((short) 3, new ElbPorts() {{ setCode("BGAKH"); setCountry("BGR"); setName("Akhtopol"); setLatitude(42.099495); setLongitude(27.94431); }});
@@ -100,84 +100,73 @@ public class ElbPorts extends ExtendedModel {
         put((short) 74, new ElbPorts() {{ setCode("BGZEL"); setCountry("BGR"); setName("Zelenka"); setLatitude(43.38223); setLongitude(28.44054); }});
         put((short) 75, new ElbPorts() {{ setCode("BGZVE"); setCountry("BGR"); setName("Zvezditsa"); setLatitude(43.184); setLongitude(27.804); }});
     }};
-    private static String name;
+    private String name = "N/A";
 
     public String getName() {
         return name;
     }
 
-    public static void setName(String value) {
-        name = value;
+    public void setName(String value) {
+        this.name = value;
     }
 
-    private static String code;
+    private String code = "N/A";
     public String getCode() {
         return code;
     }
-    public static void setCode(String str) {
-        code = str.trim();
+    public  void setCode(String str) {
+        this.code = str.trim();
     }
-    private static int type;
+    private int type = -1;
 
     public int getType() {
         return type;
     }
 
     public void setType(int value) {
-        type = value;
+        this.type = value;
     }
 
-    private String portId;
+    private short portId = 0;
 
-    public String getPortId() {
+    public short getPortId() {
         return portId;
     }
 
-    public void setPortId(String portId) {
-        this.portId = portId.trim();
+    public void setPortId(short portId) {
+        this.portId = portId;
     }
 
     public double getLatitude() {
         return latitude;
     }
 
-    public static void setLatitude(double value) {
-        latitude = value;
+    public void setLatitude(double value) {
+        this.latitude = value;
     }
 
     public double getLongitude() {
         return longitude;
     }
 
-    public static void setLongitude(double value) {
-        longitude = value;
+    public void setLongitude(double value) {
+        this.longitude = value;
     }
 
-    private static double latitude;
-    private static double longitude;
+    private double latitude = 0.00;
+    private double longitude = 0.00;
     public String getCountry() {
         return country;
     }
 
-    public static void setCountry(String value) {
+    public void setCountry(String value) {
         country = value;
     }
 
-    private static String country;
+    private String country = "NA";
 
-    @JsonIgnore
-    public static ElbPorts getPort(short sequence) {
-        return elbPortsHashMap.getOrDefault(
-                sequence,
-                new ElbPorts(){{
-                    setCode("N/A");
-                    setName("");
-                    setCountry("");
-                    setLatitude(0.00);
-                    setLongitude(0.00);
-                }});
 
-    }
+
 
 }
 //    setCode("BGZVE"); setCountry(BGR); setName("Zvezditsa"); setLatitude(43.184); setLongitude(27.804); "}");

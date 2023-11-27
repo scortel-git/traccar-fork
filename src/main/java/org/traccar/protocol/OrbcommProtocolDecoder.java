@@ -100,6 +100,8 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
         String content = response.content().toString(StandardCharsets.UTF_8);
         JsonObject json = Json.createReader(new StringReader(content)).readObject();
 
+
+
         try {
             if (channel != null && !json.getString("NextStartUTC").isEmpty() && !isFirstRun) {
                 if (poller == null){
@@ -124,19 +126,26 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
         }
 
         try {
+            if (json.getInt("ErrorID") != 0) {
+                int error = json.getInt("ErrorID");
+                if (json.getInt("ErrorID") == 16) {
+                    poller.setStartTime(setInitialTime());
+                    return null;
+                }
+            }
             if (json.get("Messages").getValueType() == JsonValue.ValueType.NULL) {
                 return null;
             }
-            LinkedList<Position> positions = new LinkedList<>();
 
+            LinkedList<Position> positions = new LinkedList<>();
+            JsonObject message;
             JsonArray messages = json.getJsonArray("Messages");
             for (int i = 0; i < messages.size(); i++) {
                 try {
-                    JsonObject message = messages.getJsonObject(i);
+                    message = messages.getJsonObject(i);
                     DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, message.getString("MobileID"));
-                    String attributes = deviceSession.get("attributes");
-                    if (deviceSession != null) {
 
+                    if (deviceSession != null) {
                         Position position = new Position(getProtocolName());
                         position.setDeviceId(deviceSession.getDeviceId());
                         position.set("messageId", message.getJsonNumber("ID").longValue());
@@ -152,7 +161,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                             if (sinNumber == 239) {
 
                                 JsonArray data = message.getJsonArray("RawPayload");
-
+//15134759222
                                 ByteBuf buf = Unpooled.buffer();
 
                                 for (int b = 0; b < data.size(); b++) {
@@ -190,7 +199,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                                     elbBaseProtocolDecoder.decodeInternal(frame, position, storage);
 
                                 } catch (Exception e) {
-
+                                    int p = 0;
                                 }
 
                                 if (position.getString("duplicated", "false").equals("true")) {
@@ -198,6 +207,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
                                 }else {
                                     position.setProtocol("elbtest");
                                 }
+                                int u = 0;
 
                             }
                             if (sinNumber == 237) {
@@ -246,9 +256,20 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                             positions.add(position);
                         }
+                        else if (sinNumber != 16 && sinNumber != 0 && sinNumber != 19){
+                            // sin = 0
+                            int oi= 0;
+                            // 16 {"ID":15158557899,"MessageUTC":"2023-11-22 02:08:52","ReceiveUTC":"2023-11-22 02:08:51","SIN":16,"MobileID":"01442513SKYC052","Payload":{"Name":"terminalRegistration","SIN":16,"MIN":8,"Fields":[{"Name":"hardwareVariant","Value":"IDP-782"},{"Name":"hardwareRevision","Value":"2"},{"Name":"hardwareResetReason","Value":"PowerOn"},{"Name":"firmwareMajor","Value":"1"},{"Name":"firmwareMinor","Value":"5"},{"Name":"firmwarePatch","Value":"7"},{"Name":"LSFVersion","Value":"9.4.8"},{"Name":"softwareResetReason","Value":"None"},{"Name":"sinList","Value":"EBESExQVFhcYGRobHSAhIn/H7e7v"},{"Name":"packageVersion","Value":"5.4.5.20273"}]},"RegionName":"IOERB7","OTAMessageSize":49,"CustomerID":0,"Transport":1,"MobileOwnerID":60001422}
+//                            19 {"ID":15159457125,"MessageUTC":"2023-11-22 05:13:52","ReceiveUTC":"2023-11-22 05:13:52","SIN":19,"MobileID":"01435427SKY7DEC","Payload":{"Name":"simpleReport","SIN":19,"MIN":1,"Fields":[{"Name":"latitude","Value":"2603899","Type":"signedint"},{"Name":"longitude","Value":"1689805","Type":"signedint"},{"Name":"speed","Value":"49","Type":"unsignedint"},{"Name":"heading","Value":"1796","Type":"unsignedint"}]},"RegionName":"CELLMTBP","OTAMessageSize":16,"CustomerID":0,"Transport":3,"MobileOwnerID":60001422}
+                        }
 
                     }
-                    } catch (Exception ignored) {
+                    } catch (Exception e){
+
+
+
+                    int in = 0;
+
                 }
 
             }

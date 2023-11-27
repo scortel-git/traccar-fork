@@ -21,6 +21,7 @@ import jakarta.inject.Singleton;
 import netscape.javascript.JSObject;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
+import org.traccar.helper.model.ElbUtil;
 import org.traccar.model.*;
 import org.traccar.session.ConnectionManager;
 import org.traccar.session.DeviceSession;
@@ -31,9 +32,7 @@ import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 @ChannelHandler.Sharable
@@ -82,7 +81,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                     ignoreAlert = true;
                 }
             }
-            if (!ignoreAlert) {
+            if (!ignoreAlert && position.getValid()) {
                 Event event = new Event(Event.TYPE_ELB_MESSAGE, position);
                 event.set(Position.KEY_EVENT, (String) alarm);
                 event.set("priorId", position.getElbObject().getId());
@@ -91,6 +90,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         }
         return null;
     }
+
     protected Map<Event, ElbMessage> analyzePosition(ElbMessage elbMessage) {
 
         return null;
@@ -109,34 +109,79 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             connectionManager.updatePriorNotification(true, priorNotification);
 
 
-
         }
     }
+
     public void saveEndFishingTripNotification(Position position) throws StorageException {
         ElbMessage entity = position.getElbObject();
         entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
         Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        int counter = 1;
+        boolean isDuplicated = false;
+
+        int error = -1;
+        if (position.getLong("messageId") == 15169515012L) {
+            error = 0;
+        }
+
         if (device == null) {
-            try {
-                device = storage.getObject(Device.class, new Request(
-                        new Columns.All(), new Condition.Equals("id", position.getDeviceId())));
-            } catch (StorageException ignore) {
+            device = ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId());
+        }
+        entity.setDeviceId(device.getId());
+        try {
+            if (entity instanceof ElbEndFishingTrip) {
+                List<ElbEndFishingTrip> oldElbEndFishingTrips = ElbUtil.getOldEndFishingTrips(storage, ((ElbEndFishingTrip) entity).getTripNumber());
+                if (!oldElbEndFishingTrips.isEmpty()) {
+                    isDuplicated = ElbUtil.getIsDuplicated(oldElbEndFishingTrips, (ElbEndFishingTrip) entity);
+                    if (!isDuplicated) {
+                        ElbEndFishingTrip previous = ElbUtil.handlePreviousEndFishingTrips(storage, oldElbEndFishingTrips, (ElbEndFishingTrip) entity);
+                        ((ElbEndFishingTrip) entity).setUniqueNumber(previous.getUniqueNumber());
+                    }
+                    else {
+                        error = -4;
+//                       15162239874:332:d7K7eIvHak6n3glhKk3WyA
+//                       15162213910:388:kLMgrRKgrUq-uPfS8bPyHA
+//                       15162328478:340:LcqcR8MuzEeL_MXzvGsE-w
+                    }
+                } else {
+                    String uniqueNumber = !Objects.equals(
+                            device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
+                            device.getAttributes().get("cfr").toString() :
+                            device.getUniqueId();
+
+                    long elbEndFishingTripCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+
+
+                    ((ElbEndFishingTrip) entity).setUniqueNumber(
+                            uniqueNumber + "-" + String.format(
+                                    "%02d",
+                                    elbEndFishingTripCounts > 0 ?
+                                            elbEndFishingTripCounts + counter
+                                            : counter));
+
+                }
+                if(isDuplicated){
+                    position.setValid(false);
+                    position.set("duplicated", "true");
+                }else {
+                    entity.setDriverId(ElbUtil.getDriverId(storage));
+                    try {
+                        entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+                    } catch (Exception e) {
+                        error = 6;
+                    } finally {
+                        connectionManager.updateElbEntity(true, entity);
+                    }
+                }
+
 
             }
+
+        }catch (Exception e){
+            error = 8;
         }
-        assert device != null;
-
-
-        try {
-            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
-
-        }finally {
-            connectionManager.updateElbEntity(true, entity);
-        }
-
-
-
     }
 
 }

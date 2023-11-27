@@ -3,9 +3,7 @@ package org.traccar.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashMap;
-
 public class ElbSpecies extends ExtendedModel {
-
     @JsonIgnore
     private static final HashMap<Short, ElbSpecies> elbSpecies = new HashMap<Short, ElbSpecies>() {{
         put((short) 1, new ElbSpecies() {{ setCode("TRS"); setType(1); setNameBG("Речна (балканска) пъстърва"); setNameGB("Brown trout"); }});
@@ -149,36 +147,35 @@ public class ElbSpecies extends ExtendedModel {
         put((short) 139, new ElbSpecies() {{ setCode("GAR"); setType(3); setNameBG("Зарган"); setNameGB(""); }});
     }};
 
-    
-    private static String nameBG;
+    private String nameBG = "NA";
     public String getNameBG() {
         return nameBG;
     }
-    private static void setNameBG(String srt) {
-        nameBG = srt;
+    public void setNameBG(String value) {
+        this.nameBG = value;
     }
-    private static String nameGB;
+    private String nameGB = "NA";
     public String getNameGB() {
         return nameGB;
     }
-    private static void setNameGB(String s) {
-        nameGB = s;
+    public void setNameGB(String value) {
+        nameGB = value;
     }
-    private static int type;
+    private int type = -1;
     public int getType() {
         return type;
     }
-    private static void setType(int i) {
+    public void setType(int i) {
         type = i;
     }
-    private static String code;
+    private String code = "NA";
     public String getCode() {
         return code;
     }
-    private static void setCode(String str) {
+    public void setCode(String str) {
         code = str.trim().toUpperCase();
     }
-    private String presentation;
+    private String presentation = "NA";
     public void setPresentation(String presentation) {
         this.presentation = presentation.trim().toUpperCase();
     }
@@ -186,17 +183,11 @@ public class ElbSpecies extends ExtendedModel {
         return presentation;
     }
 
-    @JsonIgnore
-    public static ElbSpecies getSpecies(short sequence) {
-        return elbSpecies.getOrDefault(
-                sequence,
-                new ElbSpecies(){{
-                    setCode("N/A");
-                    setNameBG("");
-                    setNameGB("");
-                    setType(-1);
-                }});
-
+    public ElbSpecies getSpecies(short sequence) {
+        return elbSpecies.getOrDefault(sequence, new ElbSpecies());
     }
+
+
+
 }
 
