@@ -167,4 +167,19 @@ public final class ElbUtil {
 
         return 0;
     }
+
+    public static ElbEndFishingTrip lookupEndFishingTrip(Storage storage, String tripNumber) throws StorageException {
+        var conditions = new LinkedList<Condition>();
+        conditions.add(new Condition.Equals("tripNumber", tripNumber));
+        conditions.add(new Condition.Equals("outdated", false));
+        conditions.add(new Condition.Equals("valid", true));
+
+        return storage.getObject(ElbEndFishingTrip.class,
+                new Request(
+
+                        new Columns.All(),
+                        Condition.merge(conditions)
+                )
+        );
+    }
 }

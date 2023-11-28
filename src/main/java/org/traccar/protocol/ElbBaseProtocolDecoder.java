@@ -291,20 +291,20 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     error =2;
                 }
 
-
                 try {
                     elbLandingDeclaration.setCatches(elbCatches);
                 } catch (JsonProcessingException ignore) {
                     error = 3;
                 }
-                position.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
-                position.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
-                position.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
-                position.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
-                position.setCourse((double) (buf.readShortLE() & 0xFFFFL));
-                position.set(Position.PREFIX_ADC+1, buf.readIntLE());
-                position.set(Position.PREFIX_ADC+2, buf.readIntLE());
-                position.set(Position.PREFIX_IO+1, buf.readByte());
+                elbLandingDeclaration.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+                elbLandingDeclaration.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                elbLandingDeclaration.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                elbLandingDeclaration.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
+                elbLandingDeclaration.setCourse((double) (buf.readShortLE() & 0xFFFFL));
+                elbLandingDeclaration.set(Position.PREFIX_ADC+1, buf.readIntLE());
+                elbLandingDeclaration.set(Position.PREFIX_ADC+2, buf.readIntLE());
+                elbLandingDeclaration.set(Position.PREFIX_IO+1, buf.readByte());
+                elbLandingDeclaration.setDeviceId(position.getDeviceId());
 
                 int fgListLength = buf.readByte();
 
@@ -318,9 +318,20 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 }catch (Exception e) {
                     int y = 0;
                 }
-
-
-
+                position.setTime(elbLandingDeclaration.getDeviceTime());
+                position.setLatitude(elbLandingDeclaration.getLatitude());
+                position.setLongitude(elbLandingDeclaration.getLongitude());
+                position.setSpeed(elbLandingDeclaration.getSpeed());
+                position.setCourse(elbLandingDeclaration.getCourse());
+                position.set(Position.PREFIX_ADC+1,
+                        elbLandingDeclaration.getInteger(Position.PREFIX_ADC+1));
+                position.set(Position.PREFIX_ADC+2,
+                        elbLandingDeclaration.getInteger(Position.PREFIX_ADC+2));
+                position.set(Position.PREFIX_IO+1,
+                        elbLandingDeclaration.getInteger(Position.PREFIX_IO+1));
+                position.set(Position.KEY_EVENT, Position.KEY_LANDING_DECLARATION);
+                position.setElbObject(elbLandingDeclaration);
+                position.setValid(true);
                 break;
             case MSG_LOST_GEAR:
                 position.set("MSG_LOST_GEAR", DatatypeConverter.printHexBinary(rawData.array()));
