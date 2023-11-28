@@ -46,6 +46,7 @@ public class ElbLandingDeclaration extends ElbMessage {
     private double altitude; // value in meters
     private Network network;
     private List<Long> geofenceIds;
+    private List<Long> fishIds;
     @JsonIgnore
     @QueryIgnore
     public List<Object> getCatches() {
@@ -70,10 +71,7 @@ public class ElbLandingDeclaration extends ElbMessage {
     }
 
     private String fishes;
-
-
     private List<Object> catches;
-
     private String tripNumber;
     public String getTripNumber() {
         return tripNumber;
@@ -89,30 +87,21 @@ public class ElbLandingDeclaration extends ElbMessage {
     public void setProtocol(String protocol) {
         this.protocol = protocol;
     }
-
-
     public Date getServerTime() {
         return serverTime;
     }
-
     public void setServerTime(Date serverTime) {
         this.serverTime = serverTime;
     }
-
-
     public Date getDeviceTime() {
         return deviceTime;
     }
-
     public void setDeviceTime(Date deviceTime) {
         this.deviceTime = deviceTime;
     }
-
-
     public Date getFixTime() {
         return fixTime;
     }
-
     public void setFixTime(Date fixTime) {
         this.fixTime = fixTime;
     }
@@ -189,6 +178,9 @@ public class ElbLandingDeclaration extends ElbMessage {
     public List<Long> getGeofenceIds() {
         return geofenceIds;
     }
+    public List<Long> fishIds() {
+        return fishIds;
+    }
 
     public void setGeofenceIds(List<? extends Number> geofenceIds) {
         if (geofenceIds != null) {
@@ -197,7 +189,29 @@ public class ElbLandingDeclaration extends ElbMessage {
             this.geofenceIds = null;
         }
     }
+    public void setFishIds(List<? extends Number> fishIds) {
+        if (fishIds != null) {
+            this.fishIds = fishIds.stream().map(Number::longValue).collect(Collectors.toList());
+        } else {
+            this.fishIds = null;
+        }
+    }
+    private double speed;
+    public double getSpeed() {
+        return speed;
+    }
 
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+    private  double course;
+    public double getCourse() {
+        return course;
+    }
+
+    public void setCourse(double course) {
+        this.course = course;
+    }
     @JsonIgnore
     @QueryIgnore
     @Override

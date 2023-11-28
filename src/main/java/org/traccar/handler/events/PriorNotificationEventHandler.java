@@ -18,18 +18,15 @@ package org.traccar.handler.events;
 import io.netty.channel.ChannelHandler;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
-import netscape.javascript.JSObject;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.helper.model.ElbUtil;
 import org.traccar.model.*;
 import org.traccar.session.ConnectionManager;
-import org.traccar.session.DeviceSession;
 import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
 import org.traccar.storage.query.Columns;
-import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Request;
 
 import java.util.*;
@@ -60,7 +57,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         Object alarm = position.getAttributes().get(Position.KEY_EVENT);
         if (alarm == Position.KEY_ELB_NOTIFICATION) {
             try {
-                saveEndFishingTripNotification(position);
+                handleEndFishingTripNotification(position);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             }
@@ -68,11 +65,18 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
         } else if (alarm == Position.KEY_END_FISHING_TRIP) {
             try {
-                saveEndFishingTripNotification(position);
+                handleEndFishingTripNotification(position);
+            } catch (StorageException e) {
+                throw new RuntimeException(e);
+            }
+        } else if (alarm == Position.KEY_LANDING_DECLARATION) {
+            try {
+                handleLandingDeclarationCertificate(position);
             } catch (StorageException e) {
                 throw new RuntimeException(e);
             }
         }
+
         if (alarm != null) {
             boolean ignoreAlert = false;
             if (ignoreDuplicateAlerts) {
@@ -96,6 +100,8 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         return null;
     }
 
+
+
     public void savePriorNotification(Position position) throws StorageException {
 
         Object object = position.getElbObject();
@@ -112,7 +118,35 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         }
     }
 
-    public void saveEndFishingTripNotification(Position position) throws StorageException {
+    public void handleLandingDeclarationCertificate(Position position) throws StorageException {
+        ElbLandingDeclaration entity = (ElbLandingDeclaration) position.getElbObject();
+        entity.setDeviceId(position.getDeviceId());
+        entity.setPositionId(position.getId());
+        entity.setPositionId(position.getId());
+        Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        entity.setDriverId(ElbUtil.getDriverId(storage));
+
+        boolean isDuplicated = false;
+
+        ElbEndFishingTrip elbEndFishingTrip = ElbUtil.lookupEndFishingTrip(storage, entity.getTripNumber());
+        if (elbEndFishingTrip != null) {
+
+        }
+        if (device == null) {
+            device = ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId());
+        }
+        entity.setDeviceId(device.getId());
+        try {
+            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+        } catch (Exception ignore) {
+        } finally {
+            connectionManager.updateElbEntity(true, entity);
+        }
+    }
+
+
+        public void handleEndFishingTripNotification(Position position) throws StorageException {
         ElbMessage entity = position.getElbObject();
         entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
@@ -120,10 +154,6 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         int counter = 1;
         boolean isDuplicated = false;
 
-        int error = -1;
-        if (position.getLong("messageId") == 15169515012L) {
-            error = 0;
-        }
 
         if (device == null) {
             device = ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId());
@@ -138,12 +168,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                         ElbEndFishingTrip previous = ElbUtil.handlePreviousEndFishingTrips(storage, oldElbEndFishingTrips, (ElbEndFishingTrip) entity);
                         ((ElbEndFishingTrip) entity).setUniqueNumber(previous.getUniqueNumber());
                     }
-                    else {
-                        error = -4;
-//                       15162239874:332:d7K7eIvHak6n3glhKk3WyA
-//                       15162213910:388:kLMgrRKgrUq-uPfS8bPyHA
-//                       15162328478:340:LcqcR8MuzEeL_MXzvGsE-w
-                    }
+
                 } else {
                     String uniqueNumber = !Objects.equals(
                             device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
@@ -169,18 +194,13 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                     try {
                         entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
-                    } catch (Exception e) {
-                        error = 6;
+                    } catch (Exception ignore) {
                     } finally {
                         connectionManager.updateElbEntity(true, entity);
                     }
                 }
-
-
             }
-
-        }catch (Exception e){
-            error = 8;
+        }catch (Exception ignore){
         }
     }
 
