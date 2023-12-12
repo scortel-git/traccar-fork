@@ -47,6 +47,14 @@ public class ElbLandingDeclaration extends ElbMessage {
     private Network network;
     private List<Long> geofenceIds;
     private List<Long> fishIds;
+    private String uniqueNumber;
+    public String getUniqueNumber() {
+        return uniqueNumber;
+    }
+
+    public void setUniqueNumber(String uniqueNumber) {
+        this.uniqueNumber = uniqueNumber;
+    }
     @JsonIgnore
     @QueryIgnore
     public List<Object> getCatches() {
@@ -164,7 +172,21 @@ public class ElbLandingDeclaration extends ElbMessage {
     public void setAltitude(double altitude) {
         this.altitude = altitude;
     }
+    private long landingPortId;
+    public long getLandingPortId() {
+        return landingPortId;
+    }
 
+    public void setLandingPortId(long landingPortId) {
+        this.landingPortId = landingPortId;
+    }
+    private long departurePortId;
+    public long getDeparturePortId() {
+        return departurePortId;
+    }
+    public void setDeparturePortId(long departurePortId) {
+        this.departurePortId = departurePortId;
+    }
 
     public Network getNetwork() {
         return network;
@@ -212,6 +234,17 @@ public class ElbLandingDeclaration extends ElbMessage {
     public void setCourse(double course) {
         this.course = course;
     }
+
+    public Long getElbPriorNotificationId() {
+        return elbPriorNotificationId;
+    }
+
+    public void setElbPriorNotificationId(Long elbPriorNotificationId) {
+        this.elbPriorNotificationId = elbPriorNotificationId;
+    }
+
+    private Long elbPriorNotificationId = -1L;
+
     @JsonIgnore
     @QueryIgnore
     @Override

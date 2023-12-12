@@ -77,7 +77,7 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
     }
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel, ByteBuf buf) throws Exception {
-
+        int additionalBufferSize =0;
         if (buf.readableBytes() < 4) {
             return null;
         }
@@ -98,14 +98,20 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
             byte content = buf.getByte(3); // content
             inx++;
             switch (mask) {
-                case ElbBaseProtocolDecoder.MSG_END_FISHING_OPERATION:
+                case ElbBaseProtocolDecoder.MSG_END_FISHING_TRIP:
                     frame = Unpooled.buffer(buf.readableBytes() * 2);
                     break;
                 case ElbBaseProtocolDecoder.MSG_LANDING_DECLARATION:
                     inx += content;
-                    int additionalBufferSize =  buf.getByte(inx) * 500;
+                    additionalBufferSize =  buf.getByte(inx) * 500;
                     frame = Unpooled.buffer(additionalBufferSize * 2 + buf.array().length);
                     break;
+                case ElbBaseProtocolDecoder.MSG_START_FISHING_TRIP:
+                    inx += content;
+                    additionalBufferSize =  5000;
+                    frame = Unpooled.buffer(additionalBufferSize * 2 + buf.array().length);
+                    break;
+
                 default:
                     frame = Unpooled.buffer(buf.array().length * 2);
             }

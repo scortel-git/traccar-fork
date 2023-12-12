@@ -54,6 +54,15 @@ public class ElbEndFishingTrip extends ElbMessage {
     public void setLandingPortId(long landingPortId) {
         this.landingPortId = landingPortId;
     }
+    private short departurePortId;
+    public short getDeparturePortId() {
+        return departurePortId;
+    }
+
+    public void setDeparturePortId(short departurePortId) {
+        this.departurePortId = departurePortId;
+    }
+
     @JsonIgnore
     @QueryIgnore
     public String getLandingPortCode() {
@@ -66,6 +75,18 @@ public class ElbEndFishingTrip extends ElbMessage {
     }
 
     private String landingPortCode;
+    @JsonIgnore
+    @QueryIgnore
+    public String getDeparturePortCode() {
+        return departurePortCode;
+    }
+    @JsonIgnore
+    @QueryIgnore
+    public void setDeparturePortCode(String departurePortCode) {
+        this.departurePortCode = departurePortCode;
+    }
+
+    private String departurePortCode;
     private Date estimatedArriveTime;
     public Date getEstimatedArriveTime() {
         return estimatedArriveTime;
@@ -157,12 +178,12 @@ public class ElbEndFishingTrip extends ElbMessage {
         setDeviceTime(time);
         setFixTime(time);
     }
-    private long driverId;
+    private long captainId;
 
-    public void setDriverId(long driverId) {
-        this.driverId = driverId;
+    public void setCaptainId(long captainId) {
+        this.captainId = captainId;
     }
-    public long getDriverId() {return driverId; }
+    public long getCaptainId() {return captainId; }
 
     private boolean outdated;
     public boolean getOutdated() {

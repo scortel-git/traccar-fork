@@ -41,5 +41,8 @@
   <include file="changelog-5.8.xml" relativeToChangelogFile="true" />
   <include file="changelog-5.9.xml" relativeToChangelogFile="true" />
   <include file="changelog-5.9.1.xml" relativeToChangelogFile="true" />
+  <include file="changelog-5.9.1-add_start_fishing_trip_table.xml" relativeToChangelogFile="true" />
+  <include file="changelog-5.9.1-add_end_fishing_trip_table.xml" relativeToChangelogFile="true" />
+  <include file="changelog-5.9.1-add_elb_landing_declaration_table.xml" relativeToChangelogFile="true" />
 
 </databaseChangeLog>
