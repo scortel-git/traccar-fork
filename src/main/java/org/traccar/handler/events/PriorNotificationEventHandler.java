@@ -58,7 +58,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         if (alarm == Position.KEY_ELB_NOTIFICATION) {
             try {
                 handleEndFishingTripNotification(position);
-            } catch (StorageException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
@@ -66,13 +66,19 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         } else if (alarm == Position.KEY_END_FISHING_TRIP) {
             try {
                 handleEndFishingTripNotification(position);
-            } catch (StorageException e) {
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         } else if (alarm == Position.KEY_LANDING_DECLARATION) {
             try {
                 handleLandingDeclarationCertificate(position);
-            } catch (StorageException e) {
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else if (alarm == Position.KEY_START_FISHING_TRIP) {
+            try {
+                handleStartFishingTrip(position);
+            } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         }
@@ -86,7 +92,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                 }
             }
             if (!ignoreAlert && position.getValid()) {
-                Event event = new Event(Event.TYPE_ELB_MESSAGE, position);
+                Event event = new Event(position.getString("event", Event.TYPE_ELB_MESSAGE), position);
                 event.set(Position.KEY_EVENT, (String) alarm);
                 event.set("priorId", position.getElbObject().getId());
                 return Collections.singletonMap(event, position);
@@ -100,57 +106,140 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         return null;
     }
 
-
-
-    public void savePriorNotification(Position position) throws StorageException {
-
-        Object object = position.getElbObject();
-        if (object instanceof PriorNotification) {
-            PriorNotification priorNotification = (PriorNotification) object;
-            priorNotification.setDeviceId(position.getDeviceId());
-
-
-            priorNotification.set("positionId", position.getId());
-            priorNotification.setId(storage.addObject(priorNotification, new Request(new Columns.Exclude("id"))));
-            connectionManager.updatePriorNotification(true, priorNotification);
-
-
-        }
-    }
-
     public void handleLandingDeclarationCertificate(Position position) throws StorageException {
         ElbLandingDeclaration entity = (ElbLandingDeclaration) position.getElbObject();
         entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
         entity.setPositionId(position.getId());
         Device device = cacheManager.getObject(Device.class, position.getDeviceId());
-        entity.setDriverId(ElbUtil.getDriverId(storage));
-
+        entity.setCaptainId(ElbUtil.getCaptainId(storage));
+        ElbStartFishingTrip elbStartFishingTrip = ElbUtil.lookupElbStartFishingTrip(storage, entity.getTripNumber());
+        if (elbStartFishingTrip != null) {
+            entity.setDeparturePortId(elbStartFishingTrip.getDeparturePortId());
+            entity.setLandingPortId(elbStartFishingTrip.getDeparturePortId());
+        }
+        int counter = 1;
         boolean isDuplicated = false;
+
+        long elbLandingDeclarationCount = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+
 
         ElbEndFishingTrip elbEndFishingTrip = ElbUtil.lookupEndFishingTrip(storage, entity.getTripNumber());
         if (elbEndFishingTrip != null) {
+            entity.setElbPriorNotificationId(elbEndFishingTrip.getId());
 
         }
         if (device == null) {
             device = ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId());
         }
         entity.setDeviceId(device.getId());
+        entity.setValid(true);
         try {
-            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+            List<ElbLandingDeclaration> oldElbLandingDeclaration = ElbUtil.getOldElbLandingDeclaration(storage, entity.getTripNumber());
+            if (!oldElbLandingDeclaration.isEmpty()) {
+                isDuplicated = ElbUtil.getIsDuplicated(oldElbLandingDeclaration, entity);
+                if (!isDuplicated) {
+                    ElbLandingDeclaration previous = ElbUtil.handlePreviousElbLandingDeclaration(storage, oldElbLandingDeclaration, entity);
+                    entity.setUniqueNumber(previous.getUniqueNumber());
+                }
+            } else {
+                String uniqueNumber = !Objects.equals(
+                        device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
+                        device.getAttributes().get("cfr").toString() :
+                        device.getUniqueId();
+
+                entity.setUniqueNumber(
+                        uniqueNumber + "-" + String.format(
+                                "%02d",
+                                elbLandingDeclarationCount + counter));
+
+            }
+            if (isDuplicated) {
+                position.setValid(false);
+                position.set("duplicated", "true");
+            } else {
+                entity.setCaptainId(ElbUtil.getCaptainId(storage));
+                try {
+                    entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+                } catch (Exception e) {
+                    int error = 5;
+                } finally {
+                    connectionManager.updateElbEntity(true, entity);
+                }
+            }
 
         } catch (Exception ignore) {
+            int i = 0;
         } finally {
             connectionManager.updateElbEntity(true, entity);
         }
     }
 
+    public void handleStartFishingTrip(Position position) throws StorageException {
+        ElbStartFishingTrip entity = (ElbStartFishingTrip) position.getElbObject();
+        entity.setDeviceId(position.getDeviceId());
+        entity.setPositionId(position.getId());
+        entity.setPositionId(position.getId());
+        Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        entity.setCaptainId(ElbUtil.getCaptainId(storage));
 
-        public void handleEndFishingTripNotification(Position position) throws StorageException {
-        ElbMessage entity = position.getElbObject();
+        int counter = 1;
+        boolean isDuplicated = false;
+
+        long elbStartFishingTripCount = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+
+
+        if (device == null) {
+            device = ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId());
+        }
+        entity.setDeviceId(device.getId());
+        entity.setValid(true);
+        try {
+
+            List<ElbStartFishingTrip> oldElbStartFishingTrips = ElbUtil.getOldElbStartFishingTrips(storage, entity.getTripNumber());
+            if (!oldElbStartFishingTrips.isEmpty()) {
+                isDuplicated = ElbUtil.getIsDuplicated(oldElbStartFishingTrips, entity);
+            }
+
+            if (isDuplicated) {
+                position.setValid(false);
+                position.set("duplicated", "true");
+            } else {
+                entity.setCaptainId(ElbUtil.getCaptainId(storage));
+                try {
+                    entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+                } catch (Exception e) {
+                    int error = 3;
+                }
+            }
+
+        } catch (Exception ignore) {
+            int i = 0;
+        }
+//        finally {
+//            connectionManager.updateElbEntity(true, entity);
+//        }
+    }
+
+
+    public void handleEndFishingTripNotification(Position position) throws StorageException {
+        ElbEndFishingTrip entity = (ElbEndFishingTrip) position.getElbObject();
         entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
         Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        long elbEndFishingTripCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+        ElbStartFishingTrip elbStartFishingTrip = ElbUtil.lookupElbStartFishingTrip(storage, entity.getTripNumber());
+        entity.setDeparturePortId(elbStartFishingTrip != null ? elbStartFishingTrip.getDeparturePortId() : -1);
+        if (entity.getDeparturePortId() > -1) {
+            ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(entity.getDeparturePortId(), new ElbPorts());
+            elbPort.setPortId(entity.getDeparturePortId());
+            entity.setDeparturePortCode(elbPort.getCode());
+        }
+
+
         int counter = 1;
         boolean isDuplicated = false;
 
@@ -160,47 +249,46 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         }
         entity.setDeviceId(device.getId());
         try {
-            if (entity instanceof ElbEndFishingTrip) {
-                List<ElbEndFishingTrip> oldElbEndFishingTrips = ElbUtil.getOldEndFishingTrips(storage, ((ElbEndFishingTrip) entity).getTripNumber());
-                if (!oldElbEndFishingTrips.isEmpty()) {
-                    isDuplicated = ElbUtil.getIsDuplicated(oldElbEndFishingTrips, (ElbEndFishingTrip) entity);
-                    if (!isDuplicated) {
-                        ElbEndFishingTrip previous = ElbUtil.handlePreviousEndFishingTrips(storage, oldElbEndFishingTrips, (ElbEndFishingTrip) entity);
-                        ((ElbEndFishingTrip) entity).setUniqueNumber(previous.getUniqueNumber());
-                    }
-
-                } else {
-                    String uniqueNumber = !Objects.equals(
-                            device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
-                            device.getAttributes().get("cfr").toString() :
-                            device.getUniqueId();
-
-                    long elbEndFishingTripCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
-
-
-                    ((ElbEndFishingTrip) entity).setUniqueNumber(
-                            uniqueNumber + "-" + String.format(
-                                    "%02d",
-                                    elbEndFishingTripCounts > 0 ?
-                                            elbEndFishingTripCounts + counter
-                                            : counter));
-
+            List<ElbEndFishingTrip> oldElbEndFishingTrips = ElbUtil.getOldEndFishingTrips(storage, entity.getTripNumber());
+            if (!oldElbEndFishingTrips.isEmpty()) {
+                isDuplicated = ElbUtil.getIsDuplicated(oldElbEndFishingTrips, entity);
+                if (!isDuplicated) {
+                    ElbEndFishingTrip previous = ElbUtil.handlePreviousEndFishingTrips(storage, oldElbEndFishingTrips, entity);
+                    entity.setUniqueNumber(previous.getUniqueNumber());
                 }
-                if(isDuplicated){
-                    position.setValid(false);
-                    position.set("duplicated", "true");
-                }else {
-                    entity.setDriverId(ElbUtil.getDriverId(storage));
-                    try {
-                        entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+            } else {
+                String uniqueNumber = !Objects.equals(
+                        device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
+                        device.getAttributes().get("cfr").toString() :
+                        device.getUniqueId();
 
-                    } catch (Exception ignore) {
-                    } finally {
-                        connectionManager.updateElbEntity(true, entity);
-                    }
+
+                entity.setUniqueNumber(
+                                uniqueNumber + "-" + String.format(
+                                        "%02d",
+                                        elbEndFishingTripCounts > 0 ?
+                                                elbEndFishingTripCounts + counter
+                                                : counter));
+
+            }
+            if (isDuplicated) {
+                position.setValid(false);
+                position.set("duplicated", "true");
+            } else {
+                entity.setCaptainId(ElbUtil.getCaptainId(storage));
+                String trip = entity.getTripNumber();
+                try {
+                    entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+                } catch (Exception e) {
+                    int error = 0;
+                } finally {
+                    connectionManager.updateElbEntity(true, entity);
                 }
             }
-        }catch (Exception ignore){
+
+        } catch (Exception e) {
+            int error = 1 ;
         }
     }
 

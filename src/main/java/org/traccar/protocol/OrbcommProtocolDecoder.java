@@ -265,11 +265,7 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                     }
                     } catch (Exception e){
-
-
-
-                    int in = 0;
-
+                        int in = 0;
                 }
 
             }

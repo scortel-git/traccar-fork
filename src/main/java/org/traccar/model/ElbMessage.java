@@ -47,12 +47,12 @@ public class ElbMessage extends ExtendedModel {
 
     private Date fixTime;
 
-    private long driverId;
+    private long captainId;
 
-    public void setDriverId(long driverId) {
-        this.driverId = driverId;
+    public void setCaptainId(long captainId) {
+        this.captainId = captainId;
     }
-    public long getDriverId() {return driverId; }
+    public long getCaptainId() {return captainId; }
     private double latitude;
 
     public double getLatitude() {

@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+        logicalFilePath="changelog-5.9.1-add_elb_landing_declaration_table">
+
+  <changeSet id="create_elb_landing_declaration_table" author="n.vlahovski">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="elb_landing_declaration"/>
+      </not>
+    </preConditions>
+
+    <createTable tableName="elb_landing_declaration">
+      <column name="id" type="INTEGER" autoIncrement="true">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="deviceid" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="positionid" type="BIGINT">
+        <constraints nullable="false"/>
+      </column>
+      <column name="elbpriornotificationid" type="BIGINT" defaultValue="-1"/>
+      <column name="servertime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+      <column name="devicetime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+      <constraints nullable="false" />
+      </column>
+      <column name="fixtime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="valid" type="BOOLEAN" defaultValue="true">
+        <constraints nullable="false" />
+      </column>
+      <column name="outdated" type="BOOLEAN" defaultValue="false">
+        <constraints nullable="false" />
+      </column>
+      <column name="estimatedarrivetime" type="TIMESTAMP"/>
+      <column name="landingportid" type="INTEGER"/>
+      <column name="departureportid" type="INTEGER"/>
+      <column name="endfishingtriptime" type="TIMESTAMP"/>
+      <column name="latitude" type="DOUBLE" >
+        <constraints nullable="false" />
+      </column>
+      <column name="longitude" type="DOUBLE" >
+        <constraints nullable="false" />
+      </column>
+      <column name="altitude" type="DOUBLE"/>
+      <column name="speed" type="DOUBLE"/>
+      <column name="course" type="DOUBLE"/>
+      <column name="creationdate" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+        <constraints nullable="false" />
+      </column>
+      <column name="tripnumber" type="VARCHAR(128)">
+        <constraints nullable="false" />
+      </column>
+      <column name="attributes" type="VARCHAR(1000000000)"/>
+      <column name="fishes" type="VARCHAR(1000000000)"/>
+      <column name="network" type="VARCHAR(4000)"/>
+      <column name="geofenceids" type="VARCHAR(4000)"/>
+      <column name="fishids" type="VARCHAR(4000)"/>
+      <column name="protocol" type="VARCHAR(128)"/>
+      <column name="uniquenumber" type="VARCHAR(128)"/>
+      <column name="captainid" type="BIGINT" defaultValue="-1"/>
+    </createTable>
+    <addForeignKeyConstraint baseTableName="elb_landing_declaration"
+                             baseColumnNames="deviceid"
+                             constraintName="fk_elb_landing_declaration_device_id"
+                             onDelete="CASCADE"
+                             referencedColumnNames="id"
+                             referencedTableName="tc_devices"/>
+
+    <addForeignKeyConstraint baseTableName="elb_landing_declaration"
+                             baseColumnNames="positionid"
+                             constraintName="fk_elb_landing_declaration_positions_id"
+                             onDelete="SET NULL"
+                             referencedColumnNames="id"
+                             referencedTableName="tc_positions"/>
+
+    <addForeignKeyConstraint baseTableName="elb_landing_declaration"
+                             baseColumnNames="elbpriornotificationid"
+                             constraintName="fk_elb_landing_declaration_elbpriornotification_id"
+                             onDelete="SET NULL"
+                             referencedColumnNames="id"
+                             referencedTableName="elb_end_fishing_trip"/>
+
+    <createIndex tableName="elb_landing_declaration" indexName="idx_elb_landing_declaration_deviceid">
+      <column name="id" />
+      <column name="deviceid" />
+      <column name="fixtime" />
+    </createIndex>
+
+  </changeSet>
+
+</databaseChangeLog>

@@ -152,6 +152,7 @@ public class Position extends Message {
     public static final String ALARM_REMOVING = "removing";
     public static final String KEY_END_FISHING_TRIP = "endFishingTrip";
     public static final String KEY_LANDING_DECLARATION = "landingDeclaration";
+    public static final String KEY_START_FISHING_TRIP = "startFishingTrip";
     public static final String KEY_DRIVER_ID = "driverId";
 
     public Position() {
