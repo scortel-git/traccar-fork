@@ -77,8 +77,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
     public static final byte MSG_IN_SSCB_DATA = (byte) 0x85;
     public static final byte MSG_IN_GET_INOECB_DATA = (byte) 0x86;
     public static final byte MSG_IN_OECB_DATA = (byte) 0x87;
-    public static final byte MSG_PRIOR_NOTIFICATION = (byte) 0x90;
-    public static final byte MSG_CATCH_CERTIFICATE = (byte) 0x91;
+    public static final byte MSG_PRIOR_NOTIFICATION = (byte) 0x92;
+    public static final byte MSG_CATCH_CERTIFICATE = (byte) 0x93;
 
 
     public long getDeviceId() {
@@ -465,7 +465,9 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         int fisheryCatchesCount = buf.readByte();
 
         while (fisheryCatchesCount > 0) {
-            catches.add(extractPriorNotificationFisheryCatch(buf));
+            ElbPriorNotificationFisheryCatch fisheryCatch = extractPriorNotificationFisheryCatch(buf);
+            fisheryCatch.setId(fisheryCatchesCount);
+            catches.add(fisheryCatch);
 
             fisheryCatchesCount--;
         }
@@ -487,6 +489,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
     private ElbPriorNotificationFisheryCatch extractPriorNotificationFisheryCatch(ByteBuf buf) {
 
         ElbPriorNotificationFisheryCatch fisheryCatch = new ElbPriorNotificationFisheryCatch();
+        byte protocolVersion = buf.readByte();
         byte content = buf.readByte();
         fisheryCatch.setAdditionalCatch(BitUtil.check(content, 6));
         fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
@@ -556,11 +559,11 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
     }
 
     private String extractStringUniqueId(ByteBuf buf) {
-        return buf.readCharSequence(buf.readByte(), StandardCharsets.US_ASCII).toString();
+        return buf.readCharSequence(buf.readByte(), StandardCharsets.UTF_8).toString();
     }
 
     private String extractStringUniqueId(ByteBuf buf, int count) {
-        return buf.readCharSequence(count, StandardCharsets.US_ASCII).toString();
+        return buf.readCharSequence(count, StandardCharsets.UTF_8).toString();
     }
 
     @Override
@@ -578,7 +581,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         byte seq = buf.readByte(); // seq
         byte mask = buf.readByte(); // mask
         byte content = buf.readByte(); // content
-        if (mask == (byte) 0x90 || mask == (byte) 0x91) {
+        if (mask == (byte) 0x92 || mask == (byte) 0x93) {
             int protocolContent = buf.readByte();
             deviceIdCount = buf.readByte();
         }
