@@ -19,14 +19,15 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import jakarta.xml.bind.DatatypeConverter;
 import org.traccar.BaseFrameDecoder;
 
 public class ElbFrameDecoder extends BaseFrameDecoder {
 
-    private static final byte STX = 2;
-    private static final byte ETX = 3;
-    private static final byte PRE_ESCAPE_CHAR = 0x10;
-    private static final byte PRE_ESCAPE_DELTA = 0x20;
+    private static final byte STX = (byte) 0x02;
+    private static final byte ETX = (byte) 0x03;
+    private static final byte PRE_ESCAPE_CHAR = (byte) 0x10;
+    private static final byte PRE_ESCAPE_DELTA = (byte) 0x20;
 
     public ByteBuf extractPacket(ByteBuf source) {
         ByteBuf result = Unpooled.buffer();
@@ -36,18 +37,23 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
 
             if (currentByte == STX) {
                 // Започваме копирането след STX.
-                result.clear();
+//                result.clear();
                 continue;
             } else if (currentByte == ETX) {
                 // Завършваме копирането на данните след ETX и прекъсваме цикъла.
+                String d = DatatypeConverter.printHexBinary(result.array());
                 break;
-            } else if (result.isWritable()) {
+            } else {
                 // Копираме байта, ако сме между STX и ETX и буфера има свободно място.
                 result.writeByte(currentByte);
             }
         }
 
-        return result.copy();
+        int readableBytes = result.readableBytes();
+        ByteBuf extracted = Unpooled.buffer(readableBytes);
+        result.readBytes(extracted, readableBytes);
+
+        return extracted;
     }
 
     public ByteBuf removePreEscape(ByteBuf frame) {
@@ -68,7 +74,7 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
                 }
             }
             buf.writeByte(ETX);
-        }catch (Exception ignored) {
+        }catch (Exception e) {
             int o = 1;
         }
 

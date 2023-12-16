@@ -183,7 +183,7 @@ public class ElbEndFishingTrip extends ElbMessage {
     public void setCaptainId(long captainId) {
         this.captainId = captainId;
     }
-    public long getCaptainId() {return captainId; }
+    public long getCaptainName() {return captainId; }
 
     private boolean outdated;
     public boolean getOutdated() {

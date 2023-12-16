@@ -81,18 +81,6 @@ public final class ElbUtil {
                 new Columns.All(), new Condition.Equals("id", deviceId)));
     }
 
-    public static List<ElbMessage> getOldElbMessages(Storage storage, String tripNumber) throws StorageException {
-
-        return storage.getObjects(ElbMessage.class,
-                new Request(
-                        new Columns.All(), new Condition.And(
-                        new Condition.Equals("tripNumber", tripNumber),
-                        new Condition.Equals("outdated", false)
-                )
-                )
-        );
-    }
-
     public static List<ElbEndFishingTrip> getOldEndFishingTrips(Storage storage, String tripNumber) throws StorageException {
 
         return storage.getObjects(ElbEndFishingTrip.class,
@@ -128,6 +116,30 @@ public final class ElbUtil {
         );
     }
 
+    public static List<ElbPriorNotification> getOldElbPriorNotification(Storage storage, String tripNumber) throws StorageException {
+
+        return storage.getObjects(ElbPriorNotification.class,
+                new Request(
+                        new Columns.All(), new Condition.And(
+                        new Condition.Equals("tripNumber", tripNumber),
+                        new Condition.Equals("outdated", false)
+                )
+                )
+        );
+    }
+
+    public static List<ElbCatchCertificate> getOldElbCatchCertificate(Storage storage, String tripNumber) throws StorageException {
+
+        return storage.getObjects(ElbCatchCertificate.class,
+                new Request(
+                        new Columns.All(), new Condition.And(
+                        new Condition.Equals("tripNumber", tripNumber),
+                        new Condition.Equals("outdated", false)
+                )
+                )
+        );
+    }
+
     public static boolean getIsDuplicated(List<ElbEndFishingTrip> oldElbEndFishingTrips, ElbEndFishingTrip entity) {
         for (ElbEndFishingTrip previous : oldElbEndFishingTrips) {
             if (Objects.equals(((ElbEndFishingTrip) entity).getDeviceTime().toString(), previous.getDeviceTime().toString())) {
@@ -147,6 +159,22 @@ public final class ElbUtil {
     public static boolean getIsDuplicated(List<ElbStartFishingTrip> oldElbStartFishingTrips, ElbStartFishingTrip entity) {
         for (ElbStartFishingTrip previous : oldElbStartFishingTrips) {
             if (Objects.equals(((ElbStartFishingTrip) entity).getDeviceTime().toString(), previous.getDeviceTime().toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean getIsDuplicated(List<ElbPriorNotification> oldElbPriorNotification, ElbPriorNotification entity) {
+        for (ElbPriorNotification previous : oldElbPriorNotification) {
+            if (Objects.equals(((ElbPriorNotification) entity).getDeviceTime().toString(), previous.getDeviceTime().toString())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean getIsDuplicated(List<ElbCatchCertificate> oldElbCatchCertificate, ElbCatchCertificate entity) {
+        for (ElbCatchCertificate previous : oldElbCatchCertificate) {
+            if (Objects.equals(((ElbCatchCertificate) entity).getDeviceTime().toString(), previous.getDeviceTime().toString())) {
                 return true;
             }
         }
@@ -175,9 +203,36 @@ public final class ElbUtil {
 
         return entity;
     }
-    public static ElbLandingDeclaration handlePreviousElbLandingDeclaration(Storage storage, List<ElbLandingDeclaration> oldElbLandingDeclaration, ElbLandingDeclaration entity) throws StorageException {
+    public static ElbLandingDeclaration handlePreviousElbMessages(Storage storage, List<ElbLandingDeclaration> oldElbLandingDeclaration, ElbLandingDeclaration entity) throws StorageException {
         List<ElbMessage> elbMessages = new ArrayList<>();
         for (ElbLandingDeclaration previous : oldElbLandingDeclaration) {
+            entity.setUniqueNumber(previous.getUniqueNumber());
+            previous.setOutdated(true);
+            elbMessages.add(previous);
+        }
+
+        updateElbMessages(storage, elbMessages);
+
+
+        return entity;
+    }
+
+    public static ElbPriorNotification handlePreviousElbMessages(Storage storage, List<ElbPriorNotification> oldElbElbPriorNotification, ElbPriorNotification entity) throws StorageException {
+        List<ElbMessage> elbMessages = new ArrayList<>();
+        for (ElbPriorNotification previous : oldElbElbPriorNotification) {
+
+            previous.setOutdated(true);
+            elbMessages.add(previous);
+        }
+
+        updateElbMessages(storage, elbMessages);
+
+
+        return entity;
+    }
+    public static ElbCatchCertificate handlePreviousElbMessages(Storage storage, List<ElbCatchCertificate> oldElbElbCatchCertificate, ElbCatchCertificate entity) throws StorageException {
+        List<ElbMessage> elbMessages = new ArrayList<>();
+        for (ElbCatchCertificate previous : oldElbElbCatchCertificate) {
             entity.setUniqueNumber(previous.getUniqueNumber());
             previous.setOutdated(true);
             elbMessages.add(previous);
@@ -204,8 +259,8 @@ public final class ElbUtil {
         );
     }
 
-    public static long getCaptainId(Storage storage) throws StorageException {
-        List<Permission> permissions = storage.getPermissions(Device.class, Driver.class);
+    public static long getCaptainId(Storage storage, Device device) throws StorageException {
+        List<Permission> permissions = storage.getPermissions(device.getClass(), device.getId(), Driver.class, 65);
         if (!permissions.isEmpty()) {
             return permissions.get(0).getPropertyId();
         }
@@ -233,6 +288,34 @@ public final class ElbUtil {
         conditions.add(new Condition.Equals("valid", true));
 
         return storage.getObject(ElbStartFishingTrip.class,
+                new Request(
+                        new Columns.All(),
+                        Condition.merge(conditions)
+                )
+        );
+    }
+
+    public static ElbCatchCertificate lookupElbCatchCertificate(Storage storage, String tripNumber) throws StorageException {
+        var conditions = new LinkedList<Condition>();
+        conditions.add(new Condition.Equals("tripNumber", tripNumber));
+        conditions.add(new Condition.Equals("outdated", false));
+        conditions.add(new Condition.Equals("valid", true));
+
+        return storage.getObject(ElbCatchCertificate.class,
+                new Request(
+                        new Columns.All(),
+                        Condition.merge(conditions)
+                )
+        );
+    }
+
+    public static ElbPriorNotification lookupElbPriorNotification(Storage storage, String tripNumber) throws StorageException {
+        var conditions = new LinkedList<Condition>();
+        conditions.add(new Condition.Equals("tripNumber", tripNumber));
+        conditions.add(new Condition.Equals("outdated", false));
+        conditions.add(new Condition.Equals("valid", true));
+
+        return storage.getObject(ElbPriorNotification.class,
                 new Request(
                         new Columns.All(),
                         Condition.merge(conditions)

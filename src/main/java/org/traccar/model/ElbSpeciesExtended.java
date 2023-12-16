@@ -36,12 +36,21 @@ public class ElbSpeciesExtended extends ExtendedModel {
     public String getPresentation() {
         return presentation;
     }
+    public short getSequence() {
+        return sequence;
+    }
+
+    public void setSequence(short sequence) {
+        this.sequence = sequence;
+    }
+
+    public short sequence;
 
 
     public void setElbSpeciesExtended(short sequence) {
 
-        ElbSpecies species = new ElbSpecies();
-
+        ElbSpecies species = new ElbSpecies().getSpecies(sequence);
+        setSequence(sequence);
         setCode(species.getCode());
         setNameBG(species.getNameBG());
         setNameGB(species.getNameGB());

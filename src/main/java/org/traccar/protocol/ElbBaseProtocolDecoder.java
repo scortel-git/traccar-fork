@@ -77,6 +77,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
     public static final byte MSG_IN_SSCB_DATA = (byte) 0x85;
     public static final byte MSG_IN_GET_INOECB_DATA = (byte) 0x86;
     public static final byte MSG_IN_OECB_DATA = (byte) 0x87;
+    public static final byte MSG_PRIOR_NOTIFICATION = (byte) 0x90;
+    public static final byte MSG_CATCH_CERTIFICATE = (byte) 0x91;
 
 
     public long getDeviceId() {
@@ -91,10 +93,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
     protected void decodeInternal(Object msg, Position position, Storage database) {
         int error = 0;
-        long i = position.getLong("messageId");
-        if (i == 15301654256L) {
-            error = 9;
-        }
+
         ByteBuf buf = (ByteBuf) msg;
         ByteBuf rawData = (ByteBuf) msg;
 
@@ -102,8 +101,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         byte seq = buf.readByte(); // Sequence
         byte mask = buf.readByte();
         byte content = buf.readByte(); // content
-        String deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
-
+        String deviceUniqueId = "";
         switch (mask) {
             case MSG_FO_DATA:
                 position.set("MSG_FO_DATA", ByteBufUtil.hexDump((ByteBuf) msg));
@@ -130,67 +128,30 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                 break;
             case MSG_END_FISHING_TRIP:
-
+                position.set("MSG_END_FISHING_TRIP", DatatypeConverter.printHexBinary(rawData.array()));
                 try {
-                    position.set("MSG_END_FISHING_TRIP", DatatypeConverter.printHexBinary(rawData.array()));
 
-                    ElbEndFishingTrip trip = new ElbEndFishingTrip();
-                    trip.setProtocol("endFishingTrip");
-                    trip.setEstimatedArriveTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
-                    short portId = buf.readShortLE();
-                    ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(portId, new ElbPorts());
-                    elbPort.setPortId(portId);
-                    trip.setLandingPortId(elbPort.getPortId());
-                    trip.setLandingPortCode(elbPort.getCode());
+                    ElbEndFishingTrip trip = extractEndFishingTrip(buf);
+                    if (trip != null) {
+                        position.setLatitude(trip.getLatitude());
+                        position.setLongitude(trip.getLongitude());
+                        position.setAltitude(0);
+                        position.setTime(trip.getDeviceTime());
+                        position.setSpeed(trip.getSpeed());
+                        position.setCourse(trip.getCourse());
 
-                    trip.setEndFishingTripTime(new Date( (trip.ADDITIONAL_SECONDS + buf.readIntLE() ) * 1000));
-                    trip.setTime(
-                            new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000)
-                    );
+                        position.set(Position.KEY_EVENT, Position.KEY_END_FISHING_TRIP);
+                        position.setElbObject(trip);
+                        position.setValid(true);
+                    }
+                    else {
+                        position.setValid(false);
+                    }
 
-                    trip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
-                    trip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
-                    trip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
-                    trip.setCourse((double) (buf.readShortLE() & 0xFFFFL));
-                    trip.setCreationDate(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
-                    int tripLength = buf.readByte();
-                    trip.setTripNumber(
-                            buf.readCharSequence(
-                                            tripLength,
-                                            StandardCharsets.UTF_8)
-                                    .toString());
-                    trip.set("analog1", buf.readIntLE());
-                    trip.set("analog2", buf.readIntLE());
-                    trip.set("dio1", buf.readByte());
-                    trip.setDeviceId(position.getDeviceId());
-                    trip.setPositionId(position.getId());
-                    trip.setOutdated(false);
-                    trip.setValid(true);
-                    trip.setOutdated(false);
-
-                    position.setLatitude(trip.getLatitude());
-                    position.setLongitude(trip.getLongitude());
-                    position.setAltitude(239);
-                    position.setTime(trip.getDeviceTime());
-                    position.setSpeed(trip.getSpeed());
-                    position.setCourse(trip.getCourse());
-
-                    position.set(Position.KEY_EVENT, Position.KEY_END_FISHING_TRIP);
-                    position.setElbObject(trip);
-                    position.setValid(true);
-                }catch (Exception e) {
+                } catch (Exception e) {
                     error = 4;
                 }
 
-
-
-
-//                if (isDublicated) {
-//                    position.set("duplicated", "true");
-//                    position.setProtocol("duplicated");
-//
-//                    position.setValid(false);
-//                }
                 break;
             case MSG_ERROR_MODULE_ID:
                 position.set("MSG_ERROR_MODULE_ID", DatatypeConverter.printHexBinary(rawData.array()));
@@ -225,6 +186,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                 break;
             case MSG_LANDING_DECLARATION:
+                deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+
                 try {
                     position.set("MSG_LANDING_DECLARATION", DatatypeConverter.printHexBinary(rawData.array()));
 
@@ -240,46 +203,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     ArrayList<Short> fishesIds = new ArrayList<Short>();
                     try {
                         while (fcRecLength > 0) {
-                            byte fcContent = buf.readByte();
-
-                            boolean isAdditional = BitUtil.check(fcContent, 6);
-                            boolean isBms = BitUtil.check(fcContent, 5);
-                            boolean isRecDeleted = BitUtil.check(fcContent, 4);
-                            boolean isDiscardedData = BitUtil.check(fcContent, 3);
-                            boolean isDataCorrection = BitUtil.check(fcContent, 2);
-                            boolean isDiscardedRecCrDisDiscardedRecCrDtt = BitUtil.check(fcContent, 1);
-
-                            byte speciesContent = buf.readByte();
-                            boolean isSpeciesFullInformation = BitUtil.check(speciesContent, 7);
-                            boolean isSpeciesDataCorrection = BitUtil.check(speciesContent, 2);
-                            boolean isSpeciesDiscardedRecCrDt = BitUtil.check(speciesContent, 1);
-                            ElbSpeciesExtended elbSpecies = new ElbSpeciesExtended();
-                            short sequence = buf.readShortLE();
-                            fishesIds.add(sequence);
-                            elbSpecies.setElbSpeciesExtended(sequence); // speciesSequenceNumber // code
-
-                            elbSpecies.set("price", isSpeciesFullInformation ? buf.readFloatLE() : 0);
-                            elbSpecies.set("currency", isSpeciesFullInformation ? buf.readByte() : 0);
-
-                            new Date((1514764800L + buf.readIntLE()) * 1000); // crDate1
-                            Date crDate2 = isSpeciesDiscardedRecCrDt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
-
-                            elbSpecies.setPresentation(ElbSpeciesPresentation.getSpeciesPresentation(buf.readByte()).getCode().toUpperCase());
-                            elbSpecies.set("conditionSequenceNumber", buf.readByte());
-                            elbSpecies.set("quantityType", buf.readByte());
-
-                            elbSpecies.set("discardedWeight", isDiscardedData ? buf.readIntLE() : 0);
-                            elbSpecies.set("discardedCount", isDiscardedData ? buf.readShortLE() : 0);
-                            elbSpecies.set("discardedType", isDiscardedData ? buf.readByte() : 0);
-
-                            elbSpecies.set("speciesWeight", buf.readIntLE());
-                            elbSpecies.set("speciesWeightCount", buf.readShortLE());
-
-                            Date speciesCrDate = new Date((1514764800L + buf.readIntLE()) * 1000);
-                            Date DiscardedSpeciesCrDate = isDiscardedRecCrDisDiscardedRecCrDtt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
-
-                            elbSpecies.set("speciesSizeGroup", buf.readByte());
-                            elbSpecies.set("qtCount", buf.readShortLE());
+                            ElbSpeciesExtended elbSpecies = getElbSpecies(buf);
                             elbSpecies.setId(fcRecLength);
 
                             elbCatches.add(elbSpecies);
@@ -288,8 +212,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                         }
 
-                    }catch (Exception e) {
-                        error =2;
+                    } catch (Exception e) {
+                        error = 2;
                     }
 
                     try {
@@ -303,9 +227,9 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     elbLandingDeclaration.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                     elbLandingDeclaration.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
                     elbLandingDeclaration.setCourse((double) (buf.readShortLE() & 0xFFFFL));
-                    elbLandingDeclaration.set(Position.PREFIX_ADC+1, buf.readIntLE());
-                    elbLandingDeclaration.set(Position.PREFIX_ADC+2, buf.readIntLE());
-                    elbLandingDeclaration.set(Position.PREFIX_IO+1, buf.readByte());
+                    elbLandingDeclaration.set(Position.PREFIX_ADC + 1, buf.readIntLE());
+                    elbLandingDeclaration.set(Position.PREFIX_ADC + 2, buf.readIntLE());
+                    elbLandingDeclaration.set(Position.PREFIX_IO + 1, buf.readByte());
                     elbLandingDeclaration.setDeviceId(position.getDeviceId());
 
                     int fgListLength = buf.readByte();
@@ -317,7 +241,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                                         fgListSize,
                                         StandardCharsets.US_ASCII)
                                 .toString());
-                    }catch (Exception e) {
+                    } catch (Exception e) {
                         int y = 0;
                     }
                     position.setTime(elbLandingDeclaration.getDeviceTime());
@@ -325,16 +249,16 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     position.setLongitude(elbLandingDeclaration.getLongitude());
                     position.setSpeed(elbLandingDeclaration.getSpeed());
                     position.setCourse(elbLandingDeclaration.getCourse());
-                    position.set(Position.PREFIX_ADC+1,
-                            elbLandingDeclaration.getInteger(Position.PREFIX_ADC+1));
-                    position.set(Position.PREFIX_ADC+2,
-                            elbLandingDeclaration.getInteger(Position.PREFIX_ADC+2));
-                    position.set(Position.PREFIX_IO+1,
-                            elbLandingDeclaration.getInteger(Position.PREFIX_IO+1));
+                    position.set(Position.PREFIX_ADC + 1,
+                            elbLandingDeclaration.getInteger(Position.PREFIX_ADC + 1));
+                    position.set(Position.PREFIX_ADC + 2,
+                            elbLandingDeclaration.getInteger(Position.PREFIX_ADC + 2));
+                    position.set(Position.PREFIX_IO + 1,
+                            elbLandingDeclaration.getInteger(Position.PREFIX_IO + 1));
                     position.set(Position.KEY_EVENT, Position.KEY_LANDING_DECLARATION);
                     position.setElbObject(elbLandingDeclaration);
                     position.setValid(true);
-                }catch (Exception e) {
+                } catch (Exception e) {
                     error = 2;
                 }
 
@@ -364,8 +288,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                 break;
             case MSG_START_FISHING_TRIP:
+                ElbStartFishingTrip elbStartFishingTrip = extractStartFishingTrip(buf);
                 try {
-                    ElbStartFishingTrip elbStartFishingTrip = new ElbStartFishingTrip();
                     elbStartFishingTrip.setProtocol("elbStartFishingTrip");
                     final byte EcoZone_bit_position = 7;
                     final byte StatZone_bit_position = 6;
@@ -376,7 +300,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     final byte bit_pos_datacorrection = 2;
                     final byte bit_pos_include_disreccrdt = 1;
 
-                    position.set("MSG_START_FISHING_TRIP", DatatypeConverter.printHexBinary(rawData.array()));
 
 
                     byte sftContent = buf.readByte();
@@ -407,7 +330,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                         int gearLength = buf.readShortLE();
                         int gearHeight = buf.readShortLE();
                         int gearTradeMark = BitUtil.check(fgContent, 6) ? buf.readShortLE() : -1;
-                        gearTradeMark = gearTradeMark == 0 ? 1  : gearTradeMark;
+                        gearTradeMark = gearTradeMark == 0 ? 1 : gearTradeMark;
 
                         int fgModel = BitUtil.check(fgContent, 5) ? buf.readShortLE() : -1;
                         fgModel = fgModel == 0 ? 1 : fgModel;
@@ -443,54 +366,15 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                                             StandardCharsets.UTF_8)
                                     .toString();
                     elbStartFishingTrip.setTripNumber(tripNum);
-                    position.set(Position.PREFIX_ADC+1, buf.readIntLE());
-                    position.set(Position.PREFIX_ADC+2, buf.readIntLE());
-                    position.set(Position.PREFIX_IO+1, buf.readByte());
+                    position.set(Position.PREFIX_ADC + 1, buf.readIntLE());
+                    position.set(Position.PREFIX_ADC + 2, buf.readIntLE());
+                    position.set(Position.PREFIX_IO + 1, buf.readByte());
                     int sftFcRecLength = buf.readByte();
                     var sftElbCatches = new LinkedList<Object>();
                     ArrayList<Short> sftFishesIds = new ArrayList<Short>();
                     try {
                         while (sftFcRecLength > 0) {
-                            byte fcContent = buf.readByte();
-
-                            boolean isAdditional = BitUtil.check(fcContent, 6);
-                            boolean isBms = BitUtil.check(fcContent, 5);
-                            boolean isRecDeleted = BitUtil.check(fcContent, 4);
-                            boolean isDiscardedData = BitUtil.check(fcContent, 3);
-                            boolean isDataCorrection = BitUtil.check(fcContent, 2);
-                            boolean isDiscardedRecCrDisDiscardedRecCrDtt = BitUtil.check(fcContent, 1);
-
-                            byte speciesContent = buf.readByte();
-                            boolean isSpeciesFullInformation = BitUtil.check(speciesContent, 7);
-                            boolean isSpeciesDataCorrection = BitUtil.check(speciesContent, 2);
-                            boolean isSpeciesDiscardedRecCrDt = BitUtil.check(speciesContent, 1);
-                            ElbSpeciesExtended elbSpecies = new ElbSpeciesExtended();
-                            short sequence = buf.readShortLE();
-                            sftFishesIds.add(sequence);
-                            elbSpecies.setElbSpeciesExtended(sequence); // speciesSequenceNumber // code
-
-                            elbSpecies.set("price", isSpeciesFullInformation ? buf.readFloatLE() : 0);
-                            elbSpecies.set("currency", isSpeciesFullInformation ? buf.readByte() : 0);
-
-                            new Date((1514764800L + buf.readIntLE()) * 1000); // crDate1
-                            Date crDate2 = isSpeciesDiscardedRecCrDt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
-
-                            elbSpecies.setPresentation(ElbSpeciesPresentation.getSpeciesPresentation(buf.readByte()).getCode().toUpperCase());
-                            elbSpecies.set("conditionSequenceNumber", buf.readByte());
-                            elbSpecies.set("quantityType", buf.readByte());
-
-                            elbSpecies.set("discardedWeight", isDiscardedData ? buf.readIntLE() : 0);
-                            elbSpecies.set("discardedCount", isDiscardedData ? buf.readShortLE() : 0);
-                            elbSpecies.set("discardedType", isDiscardedData ? buf.readByte() : 0);
-
-                            elbSpecies.set("speciesWeight", buf.readIntLE());
-                            elbSpecies.set("speciesWeightCount", buf.readShortLE());
-
-                            Date speciesCrDate = new Date((1514764800L + buf.readIntLE()) * 1000);
-                            Date DiscardedSpeciesCrDate = isDiscardedRecCrDisDiscardedRecCrDtt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
-
-                            elbSpecies.set("speciesSizeGroup", buf.readByte());
-                            elbSpecies.set("qtCount", buf.readShortLE());
+                            ElbSpeciesExtended elbSpecies = getElbSpecies(buf);
                             elbSpecies.setId(sftFcRecLength);
 
                             sftElbCatches.add(elbSpecies);
@@ -504,21 +388,21 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                         position.setLongitude(elbStartFishingTrip.getLongitude());
                         position.setSpeed(elbStartFishingTrip.getSpeed());
                         position.setCourse(elbStartFishingTrip.getCourse());
-                        position.set(Position.PREFIX_ADC+1,
-                                elbStartFishingTrip.getInteger(Position.PREFIX_ADC+1));
-                        position.set(Position.PREFIX_ADC+2,
-                                elbStartFishingTrip.getInteger(Position.PREFIX_ADC+2));
-                        position.set(Position.PREFIX_IO+1,
-                                elbStartFishingTrip.getInteger(Position.PREFIX_IO+1));
+                        position.set(Position.PREFIX_ADC + 1,
+                                elbStartFishingTrip.getInteger(Position.PREFIX_ADC + 1));
+                        position.set(Position.PREFIX_ADC + 2,
+                                elbStartFishingTrip.getInteger(Position.PREFIX_ADC + 2));
+                        position.set(Position.PREFIX_IO + 1,
+                                elbStartFishingTrip.getInteger(Position.PREFIX_IO + 1));
                         position.set(Position.KEY_EVENT, Position.KEY_START_FISHING_TRIP);
                         position.setElbObject(elbStartFishingTrip);
                         position.setValid(true);
 
-                    }catch (Exception e) {
-                        error =2;
+                    } catch (Exception e) {
+                        error = 2;
                     }
 
-                }catch (Exception e) {
+                } catch (Exception e) {
                     error = 7;
                 }
 
@@ -551,12 +435,231 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                 position.set("MSG_END_FISHING_TRIP", DatatypeConverter.printHexBinary(rawData.array()));
 
                 break;
+            case MSG_PRIOR_NOTIFICATION:
+                position.set("MSG_PRIOR_NOTIFICATION", DatatypeConverter.printHexBinary(rawData.array()));
+
+                if (Objects.equals(position.getProtocol(), "orbcomm")) {
+                    buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
+                }
+                ElbPriorNotification priorNotification = getPriorNotification(buf);
+
+
+                break;
+            case MSG_CATCH_CERTIFICATE:
+                position.set("MSG_FISHES_CERTIFICATE", DatatypeConverter.printHexBinary(rawData.array()));
+
+                if (Objects.equals(position.getProtocol(), "orbcomm")) {
+                    buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
+                }
+                ElbCatchCertificate certificate = getCatchCertificate(buf);
+
+                break;
             default:
                 break;
         }
     }
-    private String format;
 
+    private ElbCatchCertificate getCatchCertificate(ByteBuf buf) {
+        ElbCatchCertificate certificate = new ElbCatchCertificate();
+        certificate.setDeviceId(getDeviceId());
+        certificate.setProtocol("catchCertificate");
+        var catches = new LinkedList<Object>();
+        byte content = buf.readByte();
+        String deviceUniqueId = extractStringUniqueId(buf);
+
+        String captainName = extractStringUniqueId(buf);
+        certificate.setCaptainName(captainName);
+
+        String captainPhone = extractStringUniqueId(buf);
+        certificate.setCaptainPhone(captainPhone);
+
+        String ownerName = extractStringUniqueId(buf);
+        certificate.setOwnerName(ownerName);
+
+        String ownerPhone = extractStringUniqueId(buf);
+        certificate.setOwnerPhone(ownerPhone);
+
+        String tripNumber = extractStringUniqueId(buf);
+        certificate.setTripNumber(tripNumber);
+
+        short landingPortId = buf.readShortLE();
+        certificate.setLandingPortId(landingPortId);
+
+        Date landingTime = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setLandingTime(landingTime);
+
+        short departurePortId = buf.readShortLE();
+        certificate.setDeparturePortId(departurePortId);
+
+        Date departureTime = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setDepartureTime(departureTime);
+
+        String fishingPermitNumber = extractStringUniqueId(buf);
+        certificate.setFishingPermitNumber(fishingPermitNumber);
+
+        Date fishingPermitValidFrom = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setFishingPermitValidFrom(fishingPermitValidFrom);
+
+        Date fishingPermitValidTo = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setFishingPermitValidTo(fishingPermitValidTo);
+
+        String fishingCertificateNumber = extractStringUniqueId(buf);
+        certificate.setFishingCertificateNumber(fishingCertificateNumber);
+
+        Date fishingCertificateValidFrom = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setFishingCertificateValidFrom(fishingCertificateValidFrom);
+
+        Date fishingCertificateValidTo = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setFishingCertificateValidTo(fishingCertificateValidTo);
+
+        int fisheryCatchesCount = buf.readByte();
+
+        while (fisheryCatchesCount > 0) {
+            catches.add(extractCatchCertificateFisheryCatch(buf));
+            fisheryCatchesCount--;
+        }
+        try {
+            certificate.setCatches(catches);
+        } catch (Exception ignore) {
+        }
+        certificate.setInspectorVerified((int) buf.readByte() == 1);
+
+        Date packageCreationDateTime = new Date((1514764800L + buf.readIntLE()) * 1000);
+        certificate.setTime(packageCreationDateTime);
+
+        return certificate;
+    }
+
+
+    private ElbPriorNotification getPriorNotification(ByteBuf buf) {
+
+        ElbPriorNotification priorNotification = new ElbPriorNotification();
+        priorNotification.setProtocol("priorNotification");
+        priorNotification.setDeviceId(getDeviceId());
+
+        var catches = new LinkedList<Object>();
+        byte content = buf.readByte();
+        String deviceUniqueId = extractStringUniqueId(buf);
+
+        String captainName = extractStringUniqueId(buf);
+        priorNotification.setCaptainName(captainName);
+
+        String captainPhone = extractStringUniqueId(buf);
+        priorNotification.setCaptainPhone(captainPhone);
+
+        String tripNumber = extractStringUniqueId(buf);
+        priorNotification.setTripNumber(tripNumber);
+
+        short landingPortId = buf.readShortLE();
+        priorNotification.setLandingPortId(landingPortId);
+
+        Date estimatedTimeOfArrival = new Date((1514764800L + buf.readIntLE()) * 1000);
+        priorNotification.setEstimatedTimeOfArrival(estimatedTimeOfArrival);
+
+        short departurePortId = buf.readShortLE();
+        priorNotification.setDeparturePortId(departurePortId);
+
+        Date departureTime = new Date((1514764800L + buf.readIntLE()) * 1000);
+        priorNotification.setDepartureTime(departureTime);
+
+        int fisheryCatchesCount = buf.readByte();
+
+        while (fisheryCatchesCount > 0) {
+            catches.add(extractPriorNotificationFisheryCatch(buf));
+
+            fisheryCatchesCount--;
+        }
+        try {
+            priorNotification.setCatches(catches);
+
+        } catch (Exception ignore) {
+
+        }
+
+        int reasonOfArrival = buf.readByte();
+        priorNotification.setReasonOfArrival(reasonOfArrival);
+        Date packageCreationDateTime = new Date((1514764800L + buf.readIntLE()) * 1000);
+        priorNotification.setTime(packageCreationDateTime);
+
+        return priorNotification;
+    }
+
+    private ElbPriorNotificationFisheryCatch extractPriorNotificationFisheryCatch(ByteBuf buf) {
+
+        ElbPriorNotificationFisheryCatch fisheryCatch = new ElbPriorNotificationFisheryCatch();
+        byte content = buf.readByte();
+        fisheryCatch.setAdditionalCatch(BitUtil.check(content, 6));
+        fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
+        fisheryCatch.setIncludedDiscardedData(BitUtil.check(content, 3));
+        fisheryCatch.setDataCorrection(BitUtil.check(content, 2));
+        fisheryCatch.setCreationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+
+        fisheryCatch.setStartFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setStartFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setStartFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setStartFishingOperationAltitude(0.00);
+
+        fisheryCatch.setEndFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setEndFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setEndFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setEndFishingOperationAltitude(0.00);
+
+        fisheryCatch.setSpeciesId(buf.readShortLE());
+        fisheryCatch.setSpeciesPresentationId(buf.readByte());
+        fisheryCatch.setSpeciesConditionId(buf.readByte());
+        fisheryCatch.setProposeProcessing((int) buf.readByte() == 1);
+
+        fisheryCatch.setSpeciesWeightKilograms(buf.readIntLE());
+        fisheryCatch.setSpeciesWeightCount(buf.readShortLE());
+        fisheryCatch.setSpeciesSizeGroupId(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeId(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeCount(buf.readByte());
+
+        return fisheryCatch;
+    }
+    private ElbCatchCertificateFisheryCatch extractCatchCertificateFisheryCatch(ByteBuf buf) {
+
+        ElbCatchCertificateFisheryCatch fisheryCatch = new ElbCatchCertificateFisheryCatch();
+        byte content = buf.readByte();
+        fisheryCatch.setAdditionalCatch(BitUtil.check(content, 6));
+        fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
+        fisheryCatch.setIncludedDiscardedData(BitUtil.check(content, 3));
+        fisheryCatch.setDataCorrection(BitUtil.check(content, 2));
+        fisheryCatch.setCreationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+
+        fisheryCatch.setStartFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setStartFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setStartFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setStartFishingOperationAltitude(0.00);
+
+        fisheryCatch.setEndFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setEndFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setEndFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        fisheryCatch.setEndFishingOperationAltitude(0.00);
+
+        fisheryCatch.setSpeciesId(buf.readShortLE());
+        fisheryCatch.setSpeciesPresentationId(buf.readByte());
+        fisheryCatch.setSpeciesConditionId(buf.readByte());
+        fisheryCatch.setProposeProcessing((int) buf.readByte() == 1);
+
+        fisheryCatch.setSpeciesWeightKilograms(buf.readIntLE());
+        fisheryCatch.setSpeciesWeightCount(buf.readShortLE());
+        fisheryCatch.setSpeciesEstimatedWeightKilograms(buf.readIntLE());
+        fisheryCatch.setSpeciesEstimatedWeightCount(buf.readShortLE());
+
+        fisheryCatch.setSpeciesSizeGroupId(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeId(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeCount(buf.readByte());
+
+        return fisheryCatch;
+    }
+
+    private String extractStringUniqueId(ByteBuf buf) {
+        return buf.readCharSequence(buf.readByte(), StandardCharsets.US_ASCII).toString();
+    }
+    private String extractStringUniqueId(ByteBuf buf, int count) {
+        return buf.readCharSequence(count, StandardCharsets.US_ASCII).toString();
+    }
 
     @Override
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
@@ -564,18 +667,25 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         Position position = new Position(getProtocolName());
 
         String deviceUniqueId;
-
+        int deviceIdCount = 15;
         ByteBuf buffer = (ByteBuf) msg;
+        ByteBuf rawData = (ByteBuf) msg;
+        String dataHex = DatatypeConverter.printHexBinary(rawData.array());
         ByteBuf buf = buffer.copy();
-        buf.readByte(); // STX
-        buf.readByte(); // seq
-        buf.readByte(); // mask
-        buf.readByte(); // content
-        deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+        byte stx = buf.readByte(); // STX
+        byte seq = buf.readByte(); // seq
+        byte mask = buf.readByte(); // mask
+        byte content = buf.readByte(); // content
+        if (mask == (byte) 0x90 || mask == (byte) 0x91) {
+            int protocolContent = buf.readByte();
+            deviceIdCount = buf.readByte();
+        }
+        deviceUniqueId = extractStringUniqueId(buf, deviceIdCount);
         DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceUniqueId);
         if (deviceSession == null) {
             return null;
         }
+        setDeviceId(deviceSession.getDeviceId());
         position.setDeviceId(deviceSession.getDeviceId());
 
 
@@ -585,6 +695,191 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
 
         return positions;
+    }
+
+    protected ElbSpeciesExtended getElbSpecies(ByteBuf buf) {
+        byte fcContent = buf.readByte();
+
+        boolean isAdditional = BitUtil.check(fcContent, 6);
+        boolean isBms = BitUtil.check(fcContent, 5);
+        boolean isRecDeleted = BitUtil.check(fcContent, 4);
+        boolean isDiscardedData = BitUtil.check(fcContent, 3);
+        boolean isDataCorrection = BitUtil.check(fcContent, 2);
+        boolean isDiscardedRecCrDisDiscardedRecCrDtt = BitUtil.check(fcContent, 1);
+
+        byte speciesContent = fcContent;
+        boolean isSpeciesFullInformation = BitUtil.check(speciesContent, 7);
+        boolean isSpeciesDataCorrection = BitUtil.check(speciesContent, 2);
+        boolean isSpeciesDiscardedRecCrDt = BitUtil.check(speciesContent, 1);
+        ElbSpeciesExtended elbSpecies = new ElbSpeciesExtended();
+        short sequence = buf.readShortLE();
+        elbSpecies.setElbSpeciesExtended(sequence); // speciesSequenceNumber // code
+
+        elbSpecies.set("price", isSpeciesFullInformation ? buf.readFloatLE() : 0);
+        elbSpecies.set("currency", isSpeciesFullInformation ? buf.readByte() : 0);
+
+        new Date((1514764800L + buf.readIntLE()) * 1000); // crDate1
+        Date crDate2 = isSpeciesDiscardedRecCrDt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+
+        elbSpecies.setPresentation(ElbSpeciesPresentation.getSpeciesPresentation(buf.readByte()).getCode().toUpperCase());
+        elbSpecies.set("conditionSequenceNumber", buf.readByte());
+        elbSpecies.set("quantityType", buf.readByte());
+
+        elbSpecies.set("discardedWeight", isDiscardedData ? buf.readIntLE() : 0);
+        elbSpecies.set("discardedCount", isDiscardedData ? buf.readShortLE() : 0);
+        elbSpecies.set("discardedType", isDiscardedData ? buf.readByte() : 0);
+
+        elbSpecies.set("speciesWeight", buf.readIntLE());
+        elbSpecies.set("speciesWeightCount", buf.readShortLE());
+
+        Date speciesCrDate = new Date((1514764800L + buf.readIntLE()) * 1000);
+        Date DiscardedSpeciesCrDate = isDiscardedRecCrDisDiscardedRecCrDtt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+
+        elbSpecies.set("speciesSizeGroup", buf.readByte());
+        elbSpecies.set("qtCount", buf.readShortLE());
+
+        return elbSpecies;
+
+    }
+
+    private ElbEndFishingTrip extractEndFishingTrip(ByteBuf buf) {
+        try {
+            String deviceUniqueId = buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+            ElbEndFishingTrip trip = new ElbEndFishingTrip();
+            trip.setProtocol("endFishingTrip");
+            trip.setEstimatedArriveTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
+            short portId = buf.readShortLE();
+            ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(portId, new ElbPorts());
+            elbPort.setPortId(portId);
+            trip.setLandingPortId(elbPort.getPortId());
+            trip.setLandingPortCode(elbPort.getCode());
+
+            trip.setEndFishingTripTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
+            trip.setTime(
+                    new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000)
+            );
+
+            trip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+            trip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+            trip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
+            trip.setCourse((double) (buf.readShortLE() & 0xFFFFL));
+            trip.setCreationDate(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
+            int tripLength = buf.readByte();
+            trip.setTripNumber(
+                    buf.readCharSequence(
+                                    tripLength,
+                                    StandardCharsets.UTF_8)
+                            .toString());
+            trip.set("analog1", buf.readIntLE());
+            trip.set("analog2", buf.readIntLE());
+            trip.set("dio1", buf.readByte());
+            trip.setDeviceId(getDeviceId());
+            trip.setOutdated(false);
+            trip.setValid(true);
+            trip.setOutdated(false);
+
+            return trip;
+        } catch (Exception e) {
+
+        }
+        return null;
+    }
+
+    private ElbStartFishingTrip extractStartFishingTrip(ByteBuf buf) {
+        try {
+            ElbStartFishingTrip elbStartFishingTrip = new ElbStartFishingTrip();
+            elbStartFishingTrip.setProtocol("elbStartFishingTrip");
+            final byte EcoZone_bit_position = 7;
+            final byte StatZone_bit_position = 6;
+            final byte StGen_bit_position = 5;
+            final byte Pos_bit_position = 4;
+            final byte TimeSt_bit_position = 3;
+            final byte PortId_bit_position = 3;
+            final byte bit_pos_datacorrection = 2;
+            final byte bit_pos_include_disreccrdt = 1;
+            buf.readCharSequence(15, StandardCharsets.US_ASCII).toString();
+
+
+            byte sftContent = buf.readByte();
+            int timestamp = buf.readIntLE();
+            Date sftDate = new Date((1514764800L + timestamp) * 1000);
+            elbStartFishingTrip.setTime(sftDate);
+
+            Date disRecCrDTL = BitUtil.check(sftContent, bit_pos_datacorrection) ?
+                    new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+
+            elbStartFishingTrip.set("disRecCrDTL", disRecCrDTL != null ? disRecCrDTL.toString() : null);
+            short eftDeparturePortPortId = BitUtil.check(sftContent, PortId_bit_position) ? buf.readShortLE() : -1;
+            elbStartFishingTrip.setDeparturePortId(eftDeparturePortPortId);
+
+            ElbPorts sftElbPort = eftDeparturePortPortId != -1 ?
+                    ElbPorts.elbPortsHashMap.getOrDefault(eftDeparturePortPortId, new ElbPorts())
+                    : null;
+            String eftDeparturePort = sftElbPort != null ? sftElbPort.getCode() : "";
+            elbStartFishingTrip.setDeparturePortCode(eftDeparturePort);
+            int fgCount = buf.readByte();
+            var fgRecs = new LinkedList<Object>();
+
+            while (fgCount > 0) {
+                byte fgContent = buf.readByte();
+                int fishingGearId = buf.readByte();
+                int gearEye = BitUtil.check(fgContent, 7) ? buf.readShortLE() : null;
+
+                int gearLength = buf.readShortLE();
+                int gearHeight = buf.readShortLE();
+                int gearTradeMark = BitUtil.check(fgContent, 6) ? buf.readShortLE() : -1;
+                gearTradeMark = gearTradeMark == 0 ? 1 : gearTradeMark;
+
+                int fgModel = BitUtil.check(fgContent, 5) ? buf.readShortLE() : -1;
+                fgModel = fgModel == 0 ? 1 : fgModel;
+
+                int fgCnt = BitUtil.check(fgContent, 4) ? buf.readShortLE() : null;
+
+                Date creationDTL = new Date((1514764800L + buf.readIntLE()) * 1000);
+                Date disRecCreationDTL = BitUtil.check(fgContent, 1) ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+
+
+                fgCount--;
+            }
+            byte activity = buf.readByte();
+            elbStartFishingTrip.set("activity", activity);
+            int ecoZone = BitUtil.check(sftContent, EcoZone_bit_position) ? buf.readShortLE() : null;
+            elbStartFishingTrip.set("ecoZone", ecoZone);
+            int statZone = BitUtil.check(sftContent, StatZone_bit_position) ? buf.readShortLE() : -1;
+            elbStartFishingTrip.set("statZone", statZone);
+            if (BitUtil.check(sftContent, Pos_bit_position)) {
+                elbStartFishingTrip.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+                elbStartFishingTrip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                elbStartFishingTrip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+                elbStartFishingTrip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
+                elbStartFishingTrip.setCourse((double) (buf.readShortLE() & 0xFFFFL));
+            }
+            elbStartFishingTrip.setTripNumber(extractStringUniqueId(buf, 15));
+            buf.readIntLE();
+            buf.readIntLE();
+            buf.readByte();
+            int sftFcRecLength = buf.readByte();
+            var sftElbCatches = new LinkedList<Object>();
+            ArrayList<Short> sftFishesIds = new ArrayList<Short>();
+            try {
+                while (sftFcRecLength > 0) {
+                    ElbSpeciesExtended elbSpecies = getElbSpecies(buf);
+                    elbSpecies.setId(sftFcRecLength);
+
+                    sftElbCatches.add(elbSpecies);
+                    sftFcRecLength--;
+
+                }
+                elbStartFishingTrip.setCatches(sftElbCatches);
+                elbStartFishingTrip.setFishIds(sftFishesIds);
+
+            } catch (Exception e) {
+            }
+            return elbStartFishingTrip;
+
+        } catch (Exception e) {
+        }
+        return null;
     }
 
 }
