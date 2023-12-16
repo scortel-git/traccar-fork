@@ -342,7 +342,10 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
                 }
                 ElbPriorNotification priorNotification = getPriorNotification(buf);
-
+                setPositionToObject(buf, position);
+                position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
+                position.setElbObject(priorNotification);
+                position.setValid(true);
 
                 break;
             case MSG_CATCH_CERTIFICATE:
@@ -352,11 +355,24 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
                 }
                 ElbCatchCertificate certificate = getCatchCertificate(buf);
+                setPositionToObject(buf, position);
+                position.set(Position.KEY_EVENT, Position.KEY_CATCH_CERTIFICATE);
+                position.setElbObject(certificate);
+                position.setValid(true);
 
                 break;
             default:
                 break;
         }
+    }
+
+    private void setPositionToObject(ByteBuf buf, Position object) {
+
+        object.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        object.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        object.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
+        object.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
+        object.setCourse((double) (buf.readShortLE() & 0xFFFFL));
     }
 
     private ElbCatchCertificate getCatchCertificate(ByteBuf buf) {
