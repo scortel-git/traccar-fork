@@ -54,8 +54,6 @@ public class ElbCatchCertificate extends ElbMessage {
     private Date fishingCertificateValidTo;
 
     private short landingPortId;
-    private String landingPortCode;
-    private String departurePortCode;
     private short departurePortId;
     private Date landingTime;
     private Date departureTime;
@@ -88,10 +86,35 @@ public class ElbCatchCertificate extends ElbMessage {
     private double speed;
     private double course; // value in meters
 
+    private String landingPortName;
+    private String landingPortCode;
+    private String landingPortCountry;
+    private String departurePortName;
+    private String departurePortCountry;
+    private String departurePortCode;
+    @QueryIgnore
+    public String getLandingPortName() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
+        return elbPort.getName();
+    }
+    @QueryIgnore
+    public void setLandingPortName(String landingPortName) {
+        this.landingPortName = landingPortName;
+    }
+    @QueryIgnore
+    public String getLandingPortCountry() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
+        return elbPort.getCountry();
+    }
+    @QueryIgnore
+    public void setLandingPortCountry(String landingPortCountry) {
+        this.landingPortCountry = landingPortCountry;
+    }
 
-
+    @QueryIgnore
     public String getLandingPortCode() {
-        return landingPortCode;
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
+        return elbPort.getCode();
     }
 
     public void setLandingPortCode(String landingPortCode) {
@@ -99,11 +122,8 @@ public class ElbCatchCertificate extends ElbMessage {
     }
 
     public String getDeparturePortCode() {
-        return departurePortCode;
-    }
-
-    public void setDeparturePortCode(String departurePortCode) {
-        this.departurePortCode = departurePortCode;
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getCode();
     }
 
     public String getUniqueNumber() {
@@ -199,11 +219,37 @@ public class ElbCatchCertificate extends ElbMessage {
 
     public void setLandingPortId(short landingPortId) {
         this.landingPortId = landingPortId;
-        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(landingPortId, new ElbPorts());
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
         elbPort.setPortId(landingPortId);
         setLandingPortCode(elbPort.getCode());
+        setLandingPortCountry(elbPort.getCountry());
+        setLandingPortName(elbPort.getName());
 
     }
+    @QueryIgnore
+    public void setDeparturePortCode(String departurePortCode) {
+        this.departurePortCode = departurePortCode;
+    }
+    @QueryIgnore
+    public String getDeparturePortName() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getName();
+    }
+    @QueryIgnore
+    public void setDeparturePortName(String departurePortName) {
+        this.departurePortName = departurePortName;
+    }
+    @QueryIgnore
+    public String getDeparturePortCountry() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getCountry();
+    }
+    @QueryIgnore
+    public void setDeparturePortCountry(String departurePortCountry) {
+
+        this.departurePortCountry = departurePortCountry;
+    }
+
 
     public short getDeparturePortId() {
         return departurePortId;
@@ -211,6 +257,11 @@ public class ElbCatchCertificate extends ElbMessage {
 
     public void setDeparturePortId(short departurePortId) {
         this.departurePortId = departurePortId;
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        elbPort.setPortId(departurePortId);
+        setDeparturePortCode(elbPort.getCode());
+        setDeparturePortName(elbPort.getName());
+        setDeparturePortCountry(elbPort.getCountry());
     }
 
     public Date getLandingTime() {

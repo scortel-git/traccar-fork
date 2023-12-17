@@ -57,22 +57,6 @@ public class ElbPriorNotification extends ElbMessage {
     private int reasonOfArrival;
     private double speed;
     private double course; // value in meters
-    public String getLandingPortCode() {
-        return landingPortCode;
-    }
-
-    public void setLandingPortCode(String landingPortCode) {
-        this.landingPortCode = landingPortCode;
-    }
-
-    public String getDeparturePortCode() {
-        return departurePortCode;
-    }
-
-    public void setDeparturePortCode(String departurePortCode) {
-        this.departurePortCode = departurePortCode;
-    }
-
 
 
     public double getSpeed() {
@@ -219,6 +203,61 @@ public class ElbPriorNotification extends ElbMessage {
         } else {
             this.geofenceIds = null;
         }
+    }
+    private String landingPortName;
+    private String landingPortCountry;
+    private String departurePortName;
+    private String departurePortCountry;
+
+    public void setLandingPortCode(String landingPortCode) {
+        this.landingPortCode = landingPortCode;
+    }
+    @QueryIgnore
+    public String getLandingPortCode() {
+        return landingPortCode;
+    }
+    @QueryIgnore
+    public String getLandingPortName() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
+        return elbPort.getName();
+    }
+    @QueryIgnore
+    public void setLandingPortName(String landingPortName) {
+        this.landingPortName = landingPortName;
+    }
+    @QueryIgnore
+    public String getLandingPortCountry() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
+        return elbPort.getCountry();
+    }
+    @QueryIgnore
+    public void setLandingPortCountry(String landingPortCountry) {
+        this.landingPortCountry = landingPortCountry;
+    }
+    @QueryIgnore
+    public String getDeparturePortCode() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getCode();
+    }
+    public void setDeparturePortCode(String departurePortCode) {
+        this.departurePortCode = departurePortCode;
+    }
+    @QueryIgnore
+    public String getDeparturePortName() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getName();
+    }
+    @QueryIgnore
+    public void setDeparturePortName(String departurePortName) {
+        this.departurePortName = departurePortName;
+    }
+    @QueryIgnore
+    public String getDeparturePortCountry() {
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
+        return elbPort.getCountry();    }
+    @QueryIgnore
+    public void setDeparturePortCountry(String departurePortCountry) {
+        this.departurePortCountry = departurePortCountry;
     }
 
     public boolean isCancellation() {
