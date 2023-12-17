@@ -17,7 +17,9 @@ package org.traccar.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
@@ -39,10 +41,13 @@ public class ElbPriorNotification extends ElbMessage {
     private String captainPhone;
     private short landingPortId;
     private short departurePortId;
+    private String landingPortCode;
+    private String departurePortCode;
     private Date estimatedTimeOfArrival;
     private Date departureTime;
     private boolean outdated = false;
     private boolean valid = true;
+    private boolean isCancellation = false;
     private String protocol;
     private Date serverTime = new Date();
     private Date deviceTime;
@@ -50,8 +55,41 @@ public class ElbPriorNotification extends ElbMessage {
     private Date fixTime;
     private List<Long> geofenceIds;
     private int reasonOfArrival;
-    private String fishes;
-    private List<Object> catches;
+    private double speed;
+    private double course; // value in meters
+    public String getLandingPortCode() {
+        return landingPortCode;
+    }
+
+    public void setLandingPortCode(String landingPortCode) {
+        this.landingPortCode = landingPortCode;
+    }
+
+    public String getDeparturePortCode() {
+        return departurePortCode;
+    }
+
+    public void setDeparturePortCode(String departurePortCode) {
+        this.departurePortCode = departurePortCode;
+    }
+
+
+
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public double getCourse() {
+        return course;
+    }
+
+    public void setCourse(double course) {
+        this.course = course;
+    }
 
     public String getCaptainName() {
         return captainName;
@@ -150,12 +188,29 @@ public class ElbPriorNotification extends ElbMessage {
     public List<Long> getGeofenceIds() {
         return geofenceIds;
     }
+
+
+    private String fishes;
+    private List<ElbPriorNotificationFisheryCatch> catches;
+    @JsonIgnore
     public String getFishes() {
         return fishes;
     }
     public void setFishes(String fishes) {
-
         this.fishes = fishes;
+    }
+    @QueryIgnore
+    public List<ElbPriorNotificationFisheryCatch> getCatches() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        TypeReference<List<ElbPriorNotificationFisheryCatch>> mapType = new TypeReference<>() {
+        };
+        return objectMapper.readValue(this.fishes, mapType);
+    }
+    @QueryIgnore
+    public void setCatches(List<ElbPriorNotificationFisheryCatch> catches) throws JsonProcessingException {
+        this.catches = catches;
+        setFishes(new ObjectMapper().writeValueAsString(catches));
     }
 
     public void setGeofenceIds(List<? extends Number> geofenceIds) {
@@ -165,6 +220,15 @@ public class ElbPriorNotification extends ElbMessage {
             this.geofenceIds = null;
         }
     }
+
+    public boolean isCancellation() {
+        return isCancellation;
+    }
+
+    public void setCancellation(boolean cancellation) {
+        isCancellation = cancellation;
+    }
+
     @QueryIgnore
     public boolean getOutdated() {
         return outdated;
@@ -174,19 +238,6 @@ public class ElbPriorNotification extends ElbMessage {
         this.outdated = outdated;
     }
 
-    @JsonIgnore
-    @QueryIgnore
-    public List<Object> getCatches() {
-        return catches;
-    }
-    @JsonIgnore
-    @QueryIgnore
-    public void setCatches(List<Object> catches) throws JsonProcessingException {
-
-        this.catches = catches;
-        setFishes(new ObjectMapper().writeValueAsString(catches));
-
-    }
     @JsonIgnore
     @QueryIgnore
     @Override

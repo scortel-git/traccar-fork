@@ -17,7 +17,10 @@ package org.traccar.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.traccar.storage.QueryIgnore;
 import org.traccar.storage.StorageName;
 
@@ -39,6 +42,8 @@ public class ElbCatchCertificate extends ElbMessage {
     private String captainPhone;
     private String uniqueNumber;
     private String ownerName;
+    private String inspectorName;
+    private String inspectorCardId;
     private String ownerPhone;
     private String fishingPermitNumber;
     private Date fishingPermitValidFrom;
@@ -49,6 +54,8 @@ public class ElbCatchCertificate extends ElbMessage {
     private Date fishingCertificateValidTo;
 
     private short landingPortId;
+    private String landingPortCode;
+    private String departurePortCode;
     private short departurePortId;
     private Date landingTime;
     private Date departureTime;
@@ -61,9 +68,43 @@ public class ElbCatchCertificate extends ElbMessage {
     private Date fixTime;
     private List<Long> geofenceIds;
     private int reasonOfArrival;
-    private String fishes;
-    private List<Object> catches;
-    private boolean isInspectorVerified;
+    private boolean inspectorVerified = false;
+    public double getSpeed() {
+        return speed;
+    }
+
+    public void setSpeed(double speed) {
+        this.speed = speed;
+    }
+
+    public double getCourse() {
+        return course;
+    }
+
+    public void setCourse(double course) {
+        this.course = course;
+    }
+
+    private double speed;
+    private double course; // value in meters
+
+
+
+    public String getLandingPortCode() {
+        return landingPortCode;
+    }
+
+    public void setLandingPortCode(String landingPortCode) {
+        this.landingPortCode = landingPortCode;
+    }
+
+    public String getDeparturePortCode() {
+        return departurePortCode;
+    }
+
+    public void setDeparturePortCode(String departurePortCode) {
+        this.departurePortCode = departurePortCode;
+    }
 
     public String getUniqueNumber() {
         return uniqueNumber;
@@ -158,6 +199,10 @@ public class ElbCatchCertificate extends ElbMessage {
 
     public void setLandingPortId(short landingPortId) {
         this.landingPortId = landingPortId;
+        ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(landingPortId, new ElbPorts());
+        elbPort.setPortId(landingPortId);
+        setLandingPortCode(elbPort.getCode());
+
     }
 
     public short getDeparturePortId() {
@@ -234,13 +279,7 @@ public class ElbCatchCertificate extends ElbMessage {
     public List<Long> getGeofenceIds() {
         return geofenceIds;
     }
-    public String getFishes() {
-        return fishes;
-    }
-    public void setFishes(String fishes) {
 
-        this.fishes = fishes;
-    }
 
     public void setGeofenceIds(List<? extends Number> geofenceIds) {
         if (geofenceIds != null) {
@@ -249,34 +288,46 @@ public class ElbCatchCertificate extends ElbMessage {
             this.geofenceIds = null;
         }
     }
-    public boolean isInspectorVerified() {
-        return isInspectorVerified;
+    public boolean getInspectorVerified() {
+        return inspectorVerified;
     }
-    public void setInspectorVerified(boolean inspectorVerified) {
-        isInspectorVerified = inspectorVerified;
+    public void setInspectorVerified(boolean value) {
+        this.inspectorVerified = value;
     }
-    @QueryIgnore
     public boolean getOutdated() {
         return outdated;
     }
-    @QueryIgnore
     public void setOutdated(boolean outdated) {
         this.outdated = outdated;
     }
 
-    @JsonIgnore
-    @QueryIgnore
-    public List<Object> getCatches() {
-        return catches;
-    }
-    @JsonIgnore
-    @QueryIgnore
-    public void setCatches(List<Object> catches) throws JsonProcessingException {
 
+
+    private String fishes;
+    private List<ElbCatchCertificateFisheryCatch> catches;
+    @JsonIgnore
+    public String getFishes() {
+        return fishes;
+    }
+
+    public void setFishes(String fishes) {
+        this.fishes = fishes;
+    }
+    @QueryIgnore
+    public List<ElbCatchCertificateFisheryCatch> getCatches() throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        TypeReference<List<ElbCatchCertificateFisheryCatch>> mapType = new TypeReference<>() {
+        };
+        return objectMapper.readValue(this.fishes, mapType);
+    }
+    @QueryIgnore
+    public void setCatches(List<ElbCatchCertificateFisheryCatch> catches) throws JsonProcessingException {
         this.catches = catches;
         setFishes(new ObjectMapper().writeValueAsString(catches));
-
     }
+
+
     @JsonIgnore
     @QueryIgnore
     @Override
@@ -289,6 +340,23 @@ public class ElbCatchCertificate extends ElbMessage {
     @Override
     public void setType(String type) {
         super.setType(type);
+    }
+
+
+    public String getInspectorCardId() {
+        return inspectorCardId;
+    }
+
+    public void setInspectorCardId(String inspectorCardId) {
+        this.inspectorCardId = inspectorCardId;
+    }
+
+    public String getInspectorName() {
+        return inspectorName;
+    }
+
+    public void setInspectorName(String inspectorName) {
+        this.inspectorName = inspectorName;
     }
 
 }

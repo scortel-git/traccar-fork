@@ -178,13 +178,6 @@ public class ElbEndFishingTrip extends ElbMessage {
         setDeviceTime(time);
         setFixTime(time);
     }
-    private long captainId;
-
-    public void setCaptainId(long captainId) {
-        this.captainId = captainId;
-    }
-    public long getCaptainName() {return captainId; }
-
     private boolean outdated;
     public boolean getOutdated() {
         return outdated;
@@ -203,40 +196,6 @@ public class ElbEndFishingTrip extends ElbMessage {
 
     public void setValid(boolean valid) {
         this.valid = valid;
-    }
-
-    private double latitude;
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        if (latitude < -90 || latitude > 90) {
-            throw new IllegalArgumentException("Latitude out of range");
-        }
-        this.latitude = latitude;
-    }
-
-    private double longitude;
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        if (longitude < -180 || longitude > 180) {
-            throw new IllegalArgumentException("Longitude out of range");
-        }
-        this.longitude = longitude;
-    }
-
-    private double altitude; // value in meters
-
-    public double getAltitude() {
-        return altitude;
-    }
-
-    public void setAltitude(double altitude) {
-        this.altitude = altitude;
     }
 
     private Network network;

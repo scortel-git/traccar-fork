@@ -154,6 +154,7 @@ public class Position extends Message {
     public static final String KEY_LANDING_DECLARATION = "landingDeclaration";
     public static final String KEY_START_FISHING_TRIP = "startFishingTrip";
     public static final String KEY_PRIOR_NOTIFICATION = "priorNotification";
+    public static final String KEY_PRIOR_NOTIFICATION_CANCELLATION = "priorNotificationCancellation";
     public static final String KEY_CATCH_CERTIFICATE = "catchCertificate";
     public static final String KEY_DRIVER_ID = "driverId";
 

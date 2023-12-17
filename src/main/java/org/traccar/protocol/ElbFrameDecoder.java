@@ -119,7 +119,7 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
                     break;
 
                 default:
-                    frame = Unpooled.buffer(buf.array().length * 2);
+                    frame = Unpooled.buffer();
             }
 
             frame.writeBytes(buf);

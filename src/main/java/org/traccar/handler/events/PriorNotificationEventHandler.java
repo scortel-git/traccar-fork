@@ -83,9 +83,22 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             }
 
 
-        }else if (alarm == Position.KEY_PRIOR_NOTIFICATION) {
+        } else if (alarm == Position.KEY_PRIOR_NOTIFICATION) {
             try {
                 handlePriorNotification(position);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else if (alarm == Position.KEY_CATCH_CERTIFICATE) {
+            try {
+                handleCatchCertificate(position);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }else if (alarm == Position.KEY_PRIOR_NOTIFICATION_CANCELLATION) {
+            try {
+                position.setValid(false);
+                handleCatchCertificate(position);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -273,11 +286,11 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
 
                 entity.setUniqueNumber(
-                                uniqueNumber + "-" + String.format(
-                                        "%02d",
-                                        elbEndFishingTripCounts > 0 ?
-                                                elbEndFishingTripCounts + counter
-                                                : counter));
+                        uniqueNumber + "-" + String.format(
+                                "%02d",
+                                elbEndFishingTripCounts > 0 ?
+                                        elbEndFishingTripCounts + counter
+                                        : counter));
 
             }
             if (isDuplicated) {
@@ -299,22 +312,111 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             }
 
         } catch (Exception e) {
-            int error = 1 ;
+            int error = 1;
         }
     }
-    private void handlePriorNotification(Position position) throws StorageException {
 
+    private void handleCatchCertificate(Position position) throws StorageException {
+        Map<String, Object> attributes = new HashMap<>();
         int counter = 1;
         boolean isDuplicated = false;
+        ElbCatchCertificate entity = (ElbCatchCertificate) position.getElbObject();
+        Driver captain = cacheManager.findDriverByUniqueId(position.getDeviceId(), entity.getCaptainPhone());
+        if (captain != null) {
+            entity.setCaptainId(captain.getId());
+            attributes.put("captain", captain);
+            entity.setAttributes(attributes);
+        }
 
-        ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
+        entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
         Device device = cacheManager.getObject(Device.class, position.getDeviceId());
         device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
-        long elbPriorNotificationCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+        long elbCatchCertificateCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
+        entity.setDeviceId(device.getId());
+        try {
+            List<ElbCatchCertificate> oldElbCatchCertificate = ElbUtil.getOldElbCatchCertificate(storage, entity.getTripNumber());
+            if (!oldElbCatchCertificate.isEmpty()) {
+                isDuplicated = ElbUtil.getIsDuplicated(oldElbCatchCertificate, entity);
+                if (isDuplicated) {
+                    ElbCatchCertificate previous = ElbUtil.handlePreviousElbMessages(storage, oldElbCatchCertificate, entity);
+                    entity.setUniqueNumber(previous.getUniqueNumber());
+                }
+            }
+            if (entity.getUniqueNumber() == null) {
+                String uniqueNumber = !Objects.equals(
+                        device.getAttributes().getOrDefault("cfr", "").toString(), "") ?
+                        device.getAttributes().get("cfr").toString() :
+                        device.getUniqueId();
 
+
+                entity.setUniqueNumber(
+                        uniqueNumber + "-" + String.format(
+                                "%02d",
+                                elbCatchCertificateCounts > 0 ?
+                                        elbCatchCertificateCounts + counter
+                                        : counter));
+
+            }
+
+            entity.setCaptainId(ElbUtil.getCaptainId(storage, device));
+            String trip = entity.getTripNumber();
+            try {
+                entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+            } catch (Exception e) {
+                int error = 0;
+            } finally {
+                if (isDuplicated) {
+                    position.setValid(false);
+                    position.set("duplicated", "true");
+                } else {
+                    connectionManager.updateElbEntity(true, entity);
+                }
+            }
+
+
+        } catch (Exception e) {
+            int error = 1;
+        }
     }
 
+    private void handlePriorNotification(Position position) throws StorageException {
+
+        Map<String, Object> attributes = new HashMap<>();
+        boolean isDuplicated = false;
+
+        ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
+
+        List<ElbPriorNotification> oldElbPriorNotification = ElbUtil.getOldElbPriorNotification(storage, entity.getTripNumber());
+        if (!oldElbPriorNotification.isEmpty()) {
+            isDuplicated = ElbUtil.getIsDuplicated(oldElbPriorNotification, entity);
+        }
+        if (isDuplicated) {
+            position.setValid(false);
+            position.set("duplicated", "true");
+        } else {
+            Driver captain = cacheManager.findDriverByUniqueId(position.getDeviceId(), entity.getCaptainPhone());
+            if (captain != null) {
+                entity.setCaptainId(captain.getId());
+                attributes.put("captain", captain);
+            }
+            entity.setPositionId(position.getId());
+            Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+            device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
+            entity.setDeviceId(device.getId());
+            entity.setAttributes(attributes);
+
+            try {
+                entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+
+            } catch (Exception e) {
+                int error = 0;
+            } finally {
+                connectionManager.updateElbEntity(true, entity);
+            }
+        }
+    }
 }
 
 
