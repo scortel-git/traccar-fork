@@ -19,7 +19,7 @@ import jakarta.inject.Inject;
 import org.traccar.helper.DateUtil;
 import org.traccar.helper.DistanceCalculator;
 import org.traccar.helper.model.PriorNotificationUtil;
-import org.traccar.model.ElbEndFishingTrip;
+import org.traccar.model.ElbPriorNotification;
 
 import org.traccar.storage.Storage;
 import org.traccar.storage.StorageException;
@@ -50,24 +50,26 @@ public class PriorNotificationCsvExportProvider {
                 .flatMap((priorNotification -> priorNotification.getAttributes().keySet().stream()))
                 .collect(Collectors.toUnmodifiableSet());
 
-        var properties = new LinkedHashMap<String, Function<ElbEndFishingTrip, Object>>();
-        properties.put("id", ElbEndFishingTrip::getId);
-        properties.put("protocol", ElbEndFishingTrip::getProtocol);
-        properties.put("uniqueNumber", ElbEndFishingTrip::getUniqueNumber);
-        properties.put("tripNumber", ElbEndFishingTrip::getTripNumber);
-        properties.put("endFishingTripTime", priorNotification -> DateUtil.formatDate(priorNotification.getEndFishingTripTime()));
-        properties.put("estimatedArriveTime", priorNotification -> DateUtil.formatDate(priorNotification.getEstimatedArriveTime()));
+        var properties = new LinkedHashMap<String, Function<ElbPriorNotification, Object>>();
+        properties.put("id", ElbPriorNotification::getId);
+        properties.put("protocol", ElbPriorNotification::getProtocol);
+        properties.put("tripNumber", ElbPriorNotification::getTripNumber);
+        properties.put("estimatedTimeOfArrival", priorNotification -> DateUtil.formatDate(priorNotification.getEstimatedTimeOfArrival()));
         properties.put("serverTime", priorNotification -> DateUtil.formatDate(priorNotification.getServerTime()));
         properties.put("deviceTime", priorNotification -> DateUtil.formatDate(priorNotification.getDeviceTime()));
         properties.put("fixTime", priorNotification -> DateUtil.formatDate(priorNotification.getFixTime()));
-        properties.put("valid", ElbEndFishingTrip::getValid);
+        properties.put("valid", ElbPriorNotification::getValid);
         properties.put("latitude", priorNotification -> DistanceCalculator.decimalToDMS(priorNotification.getLatitude(), "latitude"));
         properties.put("longitude", priorNotification -> DistanceCalculator.decimalToDMS(priorNotification.getLongitude(), "longitude"));
-        properties.put("altitude", ElbEndFishingTrip::getAltitude);
-        properties.put("speed", ElbEndFishingTrip::getSpeed);
-        properties.put("course", ElbEndFishingTrip::getCourse);
-        properties.put("LandingPortId", ElbEndFishingTrip::getLandingPortId);
-        properties.put("deviceId", ElbEndFishingTrip::getDeviceId);
+        properties.put("altitude", ElbPriorNotification::getAltitude);
+        properties.put("speed", ElbPriorNotification::getSpeed);
+        properties.put("course", ElbPriorNotification::getCourse);
+        properties.put("LandingPortId", ElbPriorNotification::getLandingPortId);
+        properties.put("LandingPortCode", ElbPriorNotification::getLandingPortCode);
+        properties.put("DeparturePortId", ElbPriorNotification::getDeparturePortId);
+        properties.put("DeparturePortCode", ElbPriorNotification::getDeparturePortCode);
+        properties.put("Fishes", ElbPriorNotification::getFishes);
+        properties.put("deviceId", ElbPriorNotification::getDeviceId);
 
 
         attributes.forEach(key -> properties.put(key, priorNotification -> priorNotification.getAttributes().get(key)));

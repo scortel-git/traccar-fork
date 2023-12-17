@@ -18,11 +18,7 @@ package org.traccar.storage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.poi.ss.formula.functions.T;
 import org.traccar.config.Config;
-import org.traccar.model.BaseModel;
-import org.traccar.model.Device;
-import org.traccar.model.Group;
-import org.traccar.model.GroupedModel;
-import org.traccar.model.Permission;
+import org.traccar.model.*;
 import org.traccar.storage.query.Columns;
 import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Order;
@@ -99,6 +95,7 @@ public class DatabaseStorage extends Storage {
 
     @Override
     public <T> long addObject(T entity, Request request) throws StorageException {
+
         List<String> columns = request.getColumns().getColumns(entity.getClass(), "get");
         StringBuilder query = new StringBuilder("INSERT INTO ");
         query.append(getStorageName(entity.getClass()));

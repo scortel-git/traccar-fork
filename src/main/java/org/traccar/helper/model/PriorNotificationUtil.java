@@ -51,7 +51,7 @@ public final class PriorNotificationUtil {
         return distance;
     }
 
-    public static List<ElbEndFishingTrip> getPriorNotifications(
+    public static List<ElbEndFishingTrip> getEndFishingTrips(
             Storage storage, long deviceId, Date from, Date to) throws StorageException {
         return storage.getObjects( ElbEndFishingTrip.class, new Request(
                 new Columns.All(),
@@ -61,7 +61,26 @@ public final class PriorNotificationUtil {
                 new Order("fixTime")));
     }
 
-    public static List<ElbEndFishingTrip> getLatestPriorNotifications(Storage storage, long userId) throws StorageException {
+    public static List<ElbPriorNotification> getPriorNotifications(
+            Storage storage, long deviceId, Date from, Date to) throws StorageException {
+        return storage.getObjects( ElbPriorNotification.class, new Request(
+                new Columns.All(),
+                new Condition.And(
+                        new Condition.Equals("deviceId", deviceId),
+                        new Condition.Between("fixTime", "from", from, "to", to)),
+                new Order("fixTime")));
+    }
+    public static List<ElbCatchCertificate> getCatchCertificate(
+            Storage storage, long deviceId, Date from, Date to) throws StorageException {
+        return storage.getObjects( ElbCatchCertificate.class, new Request(
+                new Columns.All(),
+                new Condition.And(
+                        new Condition.Equals("deviceId", deviceId),
+                        new Condition.Between("fixTime", "from", from, "to", to)),
+                new Order("fixTime")));
+    }
+
+    public static List<ElbEndFishingTrip> getLatestEndFishingTrips(Storage storage, long userId) throws StorageException {
         var devices = storage.getObjects(Device.class, new Request(
                 new Columns.Include("id"),
                 new Condition.Permission(User.class, userId, Device.class)));
@@ -76,4 +95,37 @@ public final class PriorNotificationUtil {
                 .filter(priorNotification -> deviceIds.contains(priorNotification.getDeviceId()))
                 .collect(Collectors.toList());
     }
+
+    public static List<ElbPriorNotification> getLatestPriorNotifications(Storage storage, long userId) throws StorageException {
+        var devices = storage.getObjects(Device.class, new Request(
+                new Columns.Include("id"),
+                new Condition.Permission(User.class, userId, Device.class)));
+
+        var deviceIds = devices.stream().map(BaseModel::getId).collect(Collectors.toUnmodifiableSet());
+
+        var priorNotifications = storage.getObjects(ElbPriorNotification.class, new Request(
+                new Columns.All(),
+                new Condition.Permission(User.class, userId, Device.class)));
+
+        return priorNotifications.stream()
+                .filter(priorNotification -> deviceIds.contains(priorNotification.getDeviceId()))
+                .collect(Collectors.toList());
+    }
+    public static List<ElbCatchCertificate> getLatestElbCatchCertificate(Storage storage, long userId) throws StorageException {
+        var devices = storage.getObjects(Device.class, new Request(
+                new Columns.Include("id"),
+                new Condition.Permission(User.class, userId, Device.class)));
+
+        var deviceIds = devices.stream().map(BaseModel::getId).collect(Collectors.toUnmodifiableSet());
+
+        var catchCertificates = storage.getObjects(ElbCatchCertificate.class, new Request(
+                new Columns.All(),
+                new Condition.Permission(User.class, userId, Device.class)));
+
+        return catchCertificates.stream()
+                .filter(priorNotification -> deviceIds.contains(priorNotification.getDeviceId()))
+                .collect(Collectors.toList());
+    }
 }
+
+

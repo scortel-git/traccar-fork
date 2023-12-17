@@ -26,6 +26,7 @@ import org.traccar.Protocol;
 import org.traccar.helper.BitUtil;
 import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
+import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 
 import java.net.SocketAddress;
@@ -342,23 +343,39 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                     buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
                 }
                 ElbPriorNotification priorNotification = getPriorNotification(buf);
+
                 setPositionToObject(buf, position);
-                position.set(Position.KEY_EVENT, Position.KEY_PRIOR_NOTIFICATION);
+
+                priorNotification.setLatitude(position.getLatitude());
+                priorNotification.setLongitude(position.getLongitude());
+                priorNotification.setAltitude(position.getAltitude());
+                priorNotification.setTime(position.getDeviceTime());
+                priorNotification.setSpeed(position.getSpeed());
+                priorNotification.setCourse(position.getCourse());
+
                 position.setElbObject(priorNotification);
                 position.setValid(true);
+                position.set(Position.KEY_EVENT, !priorNotification.isCancellation() ? Position.KEY_PRIOR_NOTIFICATION : Position.KEY_PRIOR_NOTIFICATION_CANCELLATION);
+
 
                 break;
             case MSG_CATCH_CERTIFICATE:
-                position.set("MSG_FISHES_CERTIFICATE", DatatypeConverter.printHexBinary(rawData.array()));
+//                position.set("MSG_FISHES_CERTIFICATE", DatatypeConverter.printHexBinary(rawData.array()));
 
                 if (Objects.equals(position.getProtocol(), "orbcomm")) {
                     buf.readCharSequence(15, StandardCharsets.US_ASCII).toString(); // Orbcomm deviceUniqueId remove
                 }
                 ElbCatchCertificate certificate = getCatchCertificate(buf);
                 setPositionToObject(buf, position);
-                position.set(Position.KEY_EVENT, Position.KEY_CATCH_CERTIFICATE);
+                certificate.setLatitude(position.getLatitude());
+                certificate.setLongitude(position.getLongitude());
+                certificate.setAltitude(position.getAltitude());
+                certificate.setTime(position.getDeviceTime());
+                certificate.setSpeed(position.getSpeed());
+                certificate.setCourse(position.getCourse());
                 position.setElbObject(certificate);
                 position.setValid(true);
+                position.set(Position.KEY_EVENT, Position.KEY_CATCH_CERTIFICATE );
 
                 break;
             default:
@@ -377,61 +394,45 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
     private ElbCatchCertificate getCatchCertificate(ByteBuf buf) {
         ElbCatchCertificate certificate = new ElbCatchCertificate();
+
         certificate.setDeviceId(getDeviceId());
         certificate.setProtocol("catchCertificate");
-        var catches = new LinkedList<Object>();
-        byte content = buf.readByte();
-        String deviceUniqueId = extractStringUniqueId(buf);
+        var catches = new LinkedList<ElbCatchCertificateFisheryCatch>();
+        buf.readByte(); // content
+        extractStringUniqueId(buf); // deviceUniqueId
 
-        String captainName = extractStringUniqueId(buf);
-        certificate.setCaptainName(captainName);
+        certificate.setCaptainName(extractStringUniqueId(buf));
+        certificate.setCaptainPhone(extractStringUniqueId(buf));
+        certificate.setOwnerName(extractStringUniqueId(buf));
+        certificate.setOwnerPhone(extractStringUniqueId(buf));
+        certificate.setTripNumber(extractStringUniqueId(buf));
 
-        String captainPhone = extractStringUniqueId(buf);
-        certificate.setCaptainPhone(captainPhone);
+        certificate.setLandingPortId(buf.readShortLE());
+        certificate.setLandingTime(new Date((1514764800L + buf.readIntLE()) * 1000));
 
-        String ownerName = extractStringUniqueId(buf);
-        certificate.setOwnerName(ownerName);
+        certificate.setDeparturePortId(buf.readShortLE());
+        certificate.setDepartureTime(new Date((1514764800L + buf.readIntLE()) * 1000));
 
-        String ownerPhone = extractStringUniqueId(buf);
-        certificate.setOwnerPhone(ownerPhone);
+        ElbPorts landingElbPort = ElbPorts.elbPortsHashMap.getOrDefault(certificate.getLandingPortId(), new ElbPorts());
+        ElbPorts departureElbPort = ElbPorts.elbPortsHashMap.getOrDefault(certificate.getDeparturePortId(), new ElbPorts());
+        landingElbPort.setPortId(certificate.getLandingPortId());
+        departureElbPort.setPortId(certificate.getDeparturePortId());
+        certificate.setLandingPortCode(landingElbPort.getCode());
+        certificate.setDeparturePortCode(departureElbPort.getCode());
+        certificate.setFishingPermitNumber(extractStringUniqueId(buf));
+        certificate.setFishingPermitValidFrom(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setFishingPermitValidTo(new Date((1514764800L + buf.readIntLE()) * 1000));
 
-        String tripNumber = extractStringUniqueId(buf);
-        certificate.setTripNumber(tripNumber);
-
-        short landingPortId = buf.readShortLE();
-        certificate.setLandingPortId(landingPortId);
-
-        Date landingTime = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setLandingTime(landingTime);
-
-        short departurePortId = buf.readShortLE();
-        certificate.setDeparturePortId(departurePortId);
-
-        Date departureTime = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setDepartureTime(departureTime);
-
-        String fishingPermitNumber = extractStringUniqueId(buf);
-        certificate.setFishingPermitNumber(fishingPermitNumber);
-
-        Date fishingPermitValidFrom = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setFishingPermitValidFrom(fishingPermitValidFrom);
-
-        Date fishingPermitValidTo = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setFishingPermitValidTo(fishingPermitValidTo);
-
-        String fishingCertificateNumber = extractStringUniqueId(buf);
-        certificate.setFishingCertificateNumber(fishingCertificateNumber);
-
-        Date fishingCertificateValidFrom = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setFishingCertificateValidFrom(fishingCertificateValidFrom);
-
-        Date fishingCertificateValidTo = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setFishingCertificateValidTo(fishingCertificateValidTo);
+        certificate.setFishingCertificateNumber(extractStringUniqueId(buf));
+        certificate.setFishingCertificateValidFrom(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setFishingCertificateValidTo(new Date((1514764800L + buf.readIntLE()) * 1000));
 
         int fisheryCatchesCount = buf.readByte();
 
         while (fisheryCatchesCount > 0) {
-            catches.add(extractCatchCertificateFisheryCatch(buf));
+            ElbCatchCertificateFisheryCatch fisheryCatch = extractCatchCertificateFisheryCatch(buf);
+            fisheryCatch.setId(fisheryCatchesCount);
+            catches.add(fisheryCatch);
             fisheryCatchesCount--;
         }
         try {
@@ -439,9 +440,10 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         } catch (Exception ignore) {
         }
         certificate.setInspectorVerified((int) buf.readByte() == 1);
+        certificate.setInspectorName(extractStringUniqueId(buf));
+        certificate.setInspectorCardId(extractStringUniqueId(buf));
 
-        Date packageCreationDateTime = new Date((1514764800L + buf.readIntLE()) * 1000);
-        certificate.setTime(packageCreationDateTime);
+        certificate.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
 
         return certificate;
     }
@@ -453,30 +455,25 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         priorNotification.setProtocol("priorNotification");
         priorNotification.setDeviceId(getDeviceId());
 
-        var catches = new LinkedList<Object>();
+        var catches = new LinkedList<ElbPriorNotificationFisheryCatch>();
         byte content = buf.readByte();
-        String deviceUniqueId = extractStringUniqueId(buf);
 
-        String captainName = extractStringUniqueId(buf);
-        priorNotification.setCaptainName(captainName);
+        priorNotification.setCancellation(BitUtil.check(content, 0));
+        extractStringUniqueId(buf); // deviceUniqueId
+        priorNotification.setCaptainName(extractStringUniqueId(buf));
+        priorNotification.setCaptainPhone(extractStringUniqueId(buf));
+        priorNotification.setTripNumber(extractStringUniqueId(buf));
+        priorNotification.setLandingPortId( buf.readShortLE());
+        priorNotification.setEstimatedTimeOfArrival(new Date((1514764800L + buf.readIntLE()) * 1000));
+        priorNotification.setDeparturePortId(buf.readShortLE());
+        priorNotification.setDepartureTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        ElbPorts landingElbPort = ElbPorts.elbPortsHashMap.getOrDefault(priorNotification.getLandingPortId(), new ElbPorts());
+        ElbPorts departureElbPort = ElbPorts.elbPortsHashMap.getOrDefault(priorNotification.getDeparturePortId(), new ElbPorts());
+        landingElbPort.setPortId(priorNotification.getLandingPortId());
+        departureElbPort.setPortId(priorNotification.getDeparturePortId());
+        priorNotification.setLandingPortCode(landingElbPort.getCode());
+        priorNotification.setDeparturePortCode(departureElbPort.getCode());
 
-        String captainPhone = extractStringUniqueId(buf);
-        priorNotification.setCaptainPhone(captainPhone);
-
-        String tripNumber = extractStringUniqueId(buf);
-        priorNotification.setTripNumber(tripNumber);
-
-        short landingPortId = buf.readShortLE();
-        priorNotification.setLandingPortId(landingPortId);
-
-        Date estimatedTimeOfArrival = new Date((1514764800L + buf.readIntLE()) * 1000);
-        priorNotification.setEstimatedTimeOfArrival(estimatedTimeOfArrival);
-
-        short departurePortId = buf.readShortLE();
-        priorNotification.setDeparturePortId(departurePortId);
-
-        Date departureTime = new Date((1514764800L + buf.readIntLE()) * 1000);
-        priorNotification.setDepartureTime(departureTime);
 
         int fisheryCatchesCount = buf.readByte();
 
@@ -493,11 +490,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         } catch (Exception ignore) {
 
         }
-
-        int reasonOfArrival = buf.readByte();
-        priorNotification.setReasonOfArrival(reasonOfArrival);
-        Date packageCreationDateTime = new Date((1514764800L + buf.readIntLE()) * 1000);
-        priorNotification.setTime(packageCreationDateTime);
+        priorNotification.setReasonOfArrival(buf.readByte());
+        priorNotification.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
 
         return priorNotification;
     }
@@ -507,6 +501,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         ElbPriorNotificationFisheryCatch fisheryCatch = new ElbPriorNotificationFisheryCatch();
         byte protocolVersion = buf.readByte();
         byte content = buf.readByte();
+
         fisheryCatch.setAdditionalCatch(BitUtil.check(content, 6));
         fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
         fisheryCatch.setIncludedDiscardedData(BitUtil.check(content, 3));
@@ -532,7 +527,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         fisheryCatch.setSpeciesWeightCount(buf.readShortLE());
         fisheryCatch.setSpeciesSizeGroupId(buf.readByte());
         fisheryCatch.setSpeciesQuantityTypeId(buf.readByte());
-        fisheryCatch.setSpeciesQuantityTypeCount(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeCount(buf.readShortLE());
 
         return fisheryCatch;
     }
@@ -540,6 +535,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
     private ElbCatchCertificateFisheryCatch extractCatchCertificateFisheryCatch(ByteBuf buf) {
 
         ElbCatchCertificateFisheryCatch fisheryCatch = new ElbCatchCertificateFisheryCatch();
+        buf.readByte(); // protocolVersion
         byte content = buf.readByte();
         fisheryCatch.setAdditionalCatch(BitUtil.check(content, 6));
         fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
@@ -569,7 +565,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
         fisheryCatch.setSpeciesSizeGroupId(buf.readByte());
         fisheryCatch.setSpeciesQuantityTypeId(buf.readByte());
-        fisheryCatch.setSpeciesQuantityTypeCount(buf.readByte());
+        fisheryCatch.setSpeciesQuantityTypeCount(buf.readShortLE());
 
         return fisheryCatch;
     }
@@ -582,41 +578,6 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         return buf.readCharSequence(count, StandardCharsets.UTF_8).toString();
     }
 
-    @Override
-    protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
-        List<Position> positions = new LinkedList<>();
-        Position position = new Position(getProtocolName());
-
-        String deviceUniqueId;
-        int deviceIdCount = 15;
-        ByteBuf buffer = (ByteBuf) msg;
-        ByteBuf rawData = (ByteBuf) msg;
-        String dataHex = DatatypeConverter.printHexBinary(rawData.array());
-        ByteBuf buf = buffer.copy();
-        byte stx = buf.readByte(); // STX
-        byte seq = buf.readByte(); // seq
-        byte mask = buf.readByte(); // mask
-        byte content = buf.readByte(); // content
-        if (mask == (byte) 0x92 || mask == (byte) 0x93) {
-            int protocolContent = buf.readByte();
-            deviceIdCount = buf.readByte();
-        }
-        deviceUniqueId = extractStringUniqueId(buf, deviceIdCount);
-        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceUniqueId);
-        if (deviceSession == null) {
-            return null;
-        }
-        setDeviceId(deviceSession.getDeviceId());
-        position.setDeviceId(deviceSession.getDeviceId());
-
-
-        decodeInternal(msg, position, storage);
-
-        positions.add(position);
-
-
-        return positions;
-    }
 
     protected ElbSpeciesExtended getElbSpecies(ByteBuf buf) {
         byte fcContent = buf.readByte();
@@ -801,6 +762,42 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         } catch (Exception e) {
         }
         return null;
+    }
+    @Override
+    protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
+        List<Position> positions = new LinkedList<>();
+        Position position = new Position(getProtocolName());
+
+        String deviceUniqueId;
+        int deviceIdCount = 15;
+        ByteBuf buffer = (ByteBuf) msg;
+        ByteBuf rawData = (ByteBuf) msg;
+        String dataHex = DatatypeConverter.printHexBinary(rawData.array());
+        ByteBuf buf = buffer.copy();
+        byte stx = buf.readByte(); // STX
+        byte seq = buf.readByte(); // seq
+        byte mask = buf.readByte(); // mask
+        byte content = buf.readByte(); // content
+        if (mask == (byte) 0x92 || mask == (byte) 0x93) {
+            int protocolContent = buf.readByte();
+            deviceIdCount = buf.readByte();
+        }
+
+        deviceUniqueId = extractStringUniqueId(buf, deviceIdCount);
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress, deviceUniqueId);
+        if (deviceSession == null) {
+            return null;
+        }
+        setDeviceId(deviceSession.getDeviceId());
+        position.setDeviceId(deviceSession.getDeviceId());
+
+
+        decodeInternal(msg, position, storage);
+
+        positions.add(position);
+
+
+        return positions;
     }
 
 }

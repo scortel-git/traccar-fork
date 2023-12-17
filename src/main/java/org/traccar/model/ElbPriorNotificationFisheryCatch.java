@@ -145,12 +145,19 @@ public class ElbPriorNotificationFisheryCatch extends ExtendedModel {
         this.endFishingOperationAltitude = endFishingOperationAltitude;
     }
 
-    public int getSpeciesId() {
+    public short getSpeciesId() {
         return speciesId;
     }
 
-    public void setSpeciesId(int speciesId) {
+    public void setSpeciesId(short speciesId) {
+
         this.speciesId = speciesId;
+        ElbSpeciesExtended elbSpecies = new ElbSpeciesExtended();
+        elbSpecies.setElbSpeciesExtended(speciesId);
+        setSpeciesCode(elbSpecies.getCode());
+        setSpeciesNameBG(elbSpecies.getNameBG());
+        setSpeciesNameGB(elbSpecies.getNameGB());
+
     }
 
     public int getSpeciesPresentationId() {
@@ -159,6 +166,9 @@ public class ElbPriorNotificationFisheryCatch extends ExtendedModel {
 
     public void setSpeciesPresentationId(int speciesPresentationId) {
         this.speciesPresentationId = speciesPresentationId;
+        ElbSpeciesPresentation presentation = ElbSpeciesPresentation.getSpeciesPresentation((short) speciesPresentationId);
+        setSpeciesPresentationCode(presentation.getCode());
+        setSpeciesPresentationDescription(presentation.getPresent());
     }
 
     public int getSpeciesConditionId() {
@@ -231,8 +241,56 @@ public class ElbPriorNotificationFisheryCatch extends ExtendedModel {
     private double endFishingOperationLatitude;
     private double endFishingOperationLongitude;
     private double endFishingOperationAltitude;
-    private int speciesId;
+    private short speciesId;
+
+    public String getSpeciesCode() {
+        return speciesCode;
+    }
+
+    public void setSpeciesCode(String speciesCode) {
+        this.speciesCode = speciesCode;
+    }
+
+    public String getSpeciesNameBG() {
+        return speciesNameBG;
+    }
+
+    public void setSpeciesNameBG(String speciesNameBG) {
+        this.speciesNameBG = speciesNameBG;
+    }
+
+    public String getSpeciesNameGB() {
+        return speciesNameGB;
+    }
+
+    public void setSpeciesNameGB(String speciesNameGB) {
+        this.speciesNameGB = speciesNameGB;
+    }
+
+    private String speciesCode;
+    private String speciesNameBG;
+    private String speciesNameGB;
     private int speciesPresentationId;
+
+    public String getSpeciesPresentationCode() {
+        return speciesPresentationCode;
+    }
+
+    public void setSpeciesPresentationCode(String speciesPresentationCode) {
+        this.speciesPresentationCode = speciesPresentationCode;
+    }
+
+    public String getSpeciesPresentationDescription() {
+        return speciesPresentationDescription;
+    }
+
+    public void setSpeciesPresentationDescription(String speciesPresentationDescription) {
+        this.speciesPresentationDescription = speciesPresentationDescription;
+    }
+
+    private String speciesPresentationCode;
+    private String speciesPresentationDescription;
+
     private int speciesConditionId;
     private int speciesWeightKilograms;
     private short speciesWeightCount;

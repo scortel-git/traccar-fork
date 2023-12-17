@@ -24,6 +24,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
 import org.traccar.api.BaseResource;
+import org.traccar.helper.model.DeviceUtil;
 import org.traccar.helper.model.PositionUtil;
 import org.traccar.helper.model.PriorNotificationUtil;
 import org.traccar.model.*;
@@ -49,55 +50,65 @@ public class PriorNotificationResource extends BaseResource {
 
 
     @GET
-    public Collection<ElbEndFishingTrip> getJson(
-            @QueryParam("deviceId") long deviceId,
-            @QueryParam("id") List<Long> endFishingTripsIds,
+    public Collection<ElbPriorNotification> getJson(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("id") List<Long> priorNotificationIds,
             @QueryParam("from") Date from,
             @QueryParam("to") Date to,
+            @QueryParam("groupId") List<Long> groupIds,
             @QueryParam("isNotValid") boolean isNotValid
     )
             throws StorageException {
         var conditions = new LinkedList<Condition>();
 
-        if (!endFishingTripsIds.isEmpty()) {
-            var endFishingTrips = new ArrayList<ElbEndFishingTrip>();
-            for (long prioNotificationId : endFishingTripsIds) {
-                ElbEndFishingTrip elbEndFishingTrip = storage.getObject(ElbEndFishingTrip.class, new Request(
-                        new Columns.All(), new Condition.Equals("id", prioNotificationId)));
-                permissionsService.checkPermission(Device.class, getUserId(), elbEndFishingTrip.getDeviceId());
-                endFishingTrips.add(elbEndFishingTrip);
+        if (!priorNotificationIds.isEmpty()) {
+            var priorNotifications = new ArrayList<ElbPriorNotification>();
+            for (long priorNotificationId : priorNotificationIds) {
+                ElbPriorNotification ElbPriorNotification = storage.getObject(ElbPriorNotification.class, new Request(
+                        new Columns.All(), new Condition.Equals("id", priorNotificationId)));
+                permissionsService.checkPermission(Device.class, getUserId(), ElbPriorNotification.getDeviceId());
+                priorNotifications.add(ElbPriorNotification);
             }
-            return endFishingTrips;
-        } else if (deviceId > 0) {
-            permissionsService.checkPermission(Device.class, getUserId(), deviceId);
-            if (from != null && to != null) {
-                permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
-                return PriorNotificationUtil.getPriorNotifications(storage, deviceId, from, to);
-            } else {
-                conditions.add(new Condition.Equals("deviceId", deviceId));
-                conditions.add(new Condition.Equals("outdated", false));
-                if (isNotValid){
-                    return storage.getObjects(ElbEndFishingTrip.class, new Request(
-                            new Columns.All(),
-                            Condition.merge(conditions)
-                            ));
-                }
-                conditions.add(new Condition.Equals("valid", true));
-
-                return storage.getObjects(ElbEndFishingTrip.class, new Request(
-                        new Columns.All(),
-                        Condition.merge(conditions)
-                ));
-
+            return priorNotifications;
+        } else if (!deviceIds.isEmpty()) {
+            ArrayList<ElbPriorNotification> result = new ArrayList<>();
+            for (Device device: DeviceUtil.getAccessibleDevices(storage, getUserId(), deviceIds, groupIds)) {
+                result.addAll(PriorNotificationUtil.getPriorNotifications(storage, device.getId(), from, to));
             }
+            return result;
         } else {
             return PriorNotificationUtil.getLatestPriorNotifications(storage, getUserId());
         }
+//        else if (deviceId > 0) {
+//            permissionsService.checkPermission(Device.class, getUserId(), deviceId);
+//            if (from != null && to != null) {
+//                permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+//                return PriorNotificationUtil.getPriorNotifications(storage, deviceId, from, to);
+//            } else {
+//                conditions.add(new Condition.Equals("deviceId", deviceId));
+//                conditions.add(new Condition.Equals("outdated", false));
+//                if (isNotValid){
+//                    return storage.getObjects(ElbPriorNotification.class, new Request(
+//                            new Columns.All(),
+//                            Condition.merge(conditions)
+//                            ));
+//                }
+//                conditions.add(new Condition.Equals("valid", true));
+//
+//                return storage.getObjects(ElbPriorNotification.class, new Request(
+//                        new Columns.All(),
+//                        Condition.merge(conditions)
+//                ));
+//
+//            }
+//        } else {
+//            return PriorNotificationUtil.getLatestPriorNotifications(storage, getUserId());
+//        }
     }
     @Path("update")
     @GET
     public Response getJson(
-            @QueryParam("id") List<Long> endFishingTripsIds,
+            @QueryParam("id") List<Long> priorNotificationIds,
             @DefaultValue("-1")
             @QueryParam("valid") int valid
 
@@ -115,16 +126,16 @@ public class PriorNotificationResource extends BaseResource {
            return Response.status(Response.Status.BAD_REQUEST).build();
        }
 
-        var endFishingTrips = new ArrayList<ElbEndFishingTrip>();
-        if (!endFishingTripsIds.isEmpty()) {
-            for (long prioNotificationId : endFishingTripsIds) {
-                ElbEndFishingTrip elbEndFishingTrip = storage.getObject(ElbEndFishingTrip.class, new Request(
+        var endFishingTrips = new ArrayList<ElbPriorNotification>();
+        if (!priorNotificationIds.isEmpty()) {
+            for (long prioNotificationId : priorNotificationIds) {
+                ElbPriorNotification ElbPriorNotification = storage.getObject(ElbPriorNotification.class, new Request(
                         new Columns.All(), new Condition.Equals("id", prioNotificationId)));
-                endFishingTrips.add(elbEndFishingTrip);
+                endFishingTrips.add(ElbPriorNotification);
             }
         }
         if (!endFishingTrips.isEmpty()) {
-            for (ElbEndFishingTrip trip : endFishingTrips) {
+            for (ElbPriorNotification trip : endFishingTrips) {
                 trip.setValid(isValid);
                 storage.updateObject(trip, new Request(
                         new Columns.Exclude("id"),
