@@ -27,7 +27,6 @@
     }
 </style>
 <a href="$webUrl/documents/prior-notification/$elbObject.id?token=$token">DOCUMENT PRINT AVAILABLE </a><br>
-<a href="$webUrl/settings/notifications?token=$token">Unsubscribe</a>
 
 
 <table>
