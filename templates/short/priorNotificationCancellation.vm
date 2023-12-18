@@ -1,0 +1,7 @@
+#set($subject = "[PN-Cancellation] - $device.name")
+#set($captainName = $elbObject.captainName)
+
+Риболовен рейс: TRP-BGR-$elbObject.tripNumber
+----------------------------------------------------------------------------------------
+Капитан $captainName на кораб $device.name безотговорно отказа предишното уведомление!!!
+
