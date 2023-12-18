@@ -27,7 +27,11 @@
     }
 </style>
 <a href="$webUrl/documents/catch-certificate/$elbObject.id?token=$token">DOCUMENT PRINT AVAILABLE </a><br>
-
+<table>
+    #foreach( $catch in $elbObject.catches )
+        <tr><td>$velocityCount</td><td>$catch.speciesId</td></tr>
+    #end
+</table>
 
 <table>
     <thead>

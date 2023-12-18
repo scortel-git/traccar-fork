@@ -101,8 +101,8 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             }
         }else if (alarm == Position.KEY_PRIOR_NOTIFICATION_CANCELLATION) {
             try {
-                position.setValid(false);
-                handleCatchCertificate(position);
+//                position.setValid(false);
+                handlePriorNotification(position);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
