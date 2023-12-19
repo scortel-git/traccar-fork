@@ -53,7 +53,7 @@ check_requirement () {
 }
 
 info "Checking build requirements for platform: "$PLATFORM
-check_requirement "EAFA Prior Notification server archive" "ls ../target/tracker-server.jar" "Missing eafa-pn-system archive"
+check_requirement "EAFA Prior Notification server archive" "ls ../target/eafa-pn-server.jar" "Missing eafa-pn-system archive"
 check_requirement "Zip" "which zip" "Missing zip binary"
 check_requirement "Unzip" "which unzip" "Missing unzip binary"
 if [ $PLATFORM != "other" ]; then
@@ -87,7 +87,7 @@ fi
 prepare () {
   mkdir -p out/{conf,data,lib,logs,legacy,modern,schema,templates}
 
-  cp ../target/tracker-server.jar out
+  cp ../target/eafa-pn-server.jar out
   cp ../target/lib/* out/lib
   cp ../schema/* out/schema
   cp -r ../templates/* out/templates
