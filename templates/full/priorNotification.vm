@@ -1,4 +1,4 @@
-#set($subject = "[PN] - $device.name: $elbObject.uniqueNumber ")
+#set($subject = "[PN] - $device.name: TRP-BGR-$elbObject.tripNumber ")
 <!DOCTYPE html>
 <html>
 <body>
