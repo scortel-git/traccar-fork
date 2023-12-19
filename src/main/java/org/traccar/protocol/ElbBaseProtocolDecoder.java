@@ -431,7 +431,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
         while (fisheryCatchesCount > 0) {
             ElbCatchCertificateFisheryCatch fisheryCatch = extractCatchCertificateFisheryCatch(buf);
-            fisheryCatch.setId(fisheryCatchesCount);
+            fisheryCatch.setId(fisheryCatchesCount + 1);
             catches.add(fisheryCatch);
             fisheryCatchesCount--;
         }
@@ -479,7 +479,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
         while (fisheryCatchesCount > 0) {
             ElbPriorNotificationFisheryCatch fisheryCatch = extractPriorNotificationFisheryCatch(buf);
-            fisheryCatch.setId(fisheryCatchesCount);
+            fisheryCatch.setId(fisheryCatchesCount + 1);
             catches.add(fisheryCatch);
 
             fisheryCatchesCount--;
