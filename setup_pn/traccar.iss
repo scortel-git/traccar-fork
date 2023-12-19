@@ -1,6 +1,6 @@
 [Setup]
 AppName=EAFA PRIOR NOTIFICATION SYSTEM
-AppVersion=5.9
+AppVersion=1.0.0.1-alpha
 DefaultDirName={pf}\eafa-pn-system
 OutputBaseFilename=eafa-pn-system
 ArchitecturesInstallIn64BitMode=x64
