@@ -13,7 +13,7 @@ chmod -R go+rX /opt/eafa-pn-system
 
 if [ ${PRESERVECONFIG} -eq 1 ] && [ -f /opt/eafa-pn-system/conf/traccar.xml.saved ]
 then
-    mv -f /opt/eafa-pn-system/conf/traccar.xml.saved /opt/eafa-pn-system/conf/traccar.xml
+    mv -f /opt/eafa-pn-system/conf/eafa-pn-system.xml.saved /opt/eafa-pn-system/conf/traccar.xml
 fi
 
 mv /opt/eafa-pn-system/eafa-pn-system.service /etc/systemd/system
