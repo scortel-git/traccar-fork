@@ -1,8 +1,8 @@
 [Setup]
-AppName=Traccar
+AppName=EAFA PRIOR NOTIFICATION SYSTEM
 AppVersion=5.9
-DefaultDirName={pf}\Traccar
-OutputBaseFilename=traccar-setup
+DefaultDirName={pf}\eafa-pn-system
+OutputBaseFilename=eafa-pn-system
 ArchitecturesInstallIn64BitMode=x64
 
 [Dirs]
@@ -13,7 +13,7 @@ Name: "{app}\logs"
 Source: "out\*"; DestDir: "{app}"; Flags: recursesubdirs
 
 [Run]
-Filename: "{app}\jre\bin\java.exe"; Parameters: "-jar ""{app}\tracker-server.jar"" --install .\conf\traccar.xml"; Flags: runhidden
+Filename: "{app}\jre\bin\java.exe"; Parameters: "-jar ""{app}\tracker-server.jar"" --install .\conf\eafa-pn-system.xml"; Flags: runhidden
 
 [UninstallRun]
 Filename: "{app}\jre\bin\java.exe"; Parameters: "-jar ""{app}\tracker-server.jar"" --uninstall"; Flags: runhidden
