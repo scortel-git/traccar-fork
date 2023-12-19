@@ -4,22 +4,13 @@
 
 <properties>
 
-    <!--
-
-    DO NOT MODIFY THIS FILE. Use traccar.xml instead.
-
-    -->
-
-    <entry key='web.port'>8082</entry>
-    <entry key='web.path'>./traccar-web/modern/build</entry>
+    <entry key='web.port'>1914</entry>
+    <entry key='web.path'>./modern</entry>
     <entry key='web.sanitize'>false</entry>
     <entry key='web.persistSession'>false</entry>
     <entry key='web.console'>false</entry>
     <entry key='geocoder.enable'>false</entry>
-    <entry key='geocoder.type'>locationiq</entry>
-    <entry key='geocoder.key'>pk.689d849289c8c63708068b2ff1f63b2d</entry>
-    <entry key='geocoder.onRequest'>false</entry>
-    <entry key='geocoder.ignorePositions'>true</entry>
+
     <entry key='notificator.types'>web,mail,command</entry>
 
 <!--logger.queries -->
