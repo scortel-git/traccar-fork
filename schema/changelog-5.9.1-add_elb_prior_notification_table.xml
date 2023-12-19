@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd"
+        logicalFilePath="changelog-5.9.1-add_elb_prior_notification_table">
+
+
+    <changeSet author="n.vlahovski" id="create_elb_prior_notification_table">
+        <createTable tableName="elb_prior_notification">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="protocol" type="VARCHAR(128)" />
+            <column name="tripnumber" type="VARCHAR(128)" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="deviceid" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="positionid" type="BIGINT" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="estimatedtimeofarrival" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="landingportid" type="BIGINT" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="landingportcode" type="VARCHAR(128)" />
+            <column name="departuretime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="departureportid" type="BIGINT" >
+                <constraints nullable="false"/>
+            </column>
+            <column name="departureportcode" type="VARCHAR(128)" />
+            <column name="iscancellation" type="BOOLEAN" defaultValue="FALSE">
+                <constraints nullable="false" />
+            </column>
+            <column name="captainid" type="BIGINT" />
+            <column name="captainname" type="VARCHAR(512)" />
+            <column name="captainphone" type="VARCHAR(512)" />
+            <column name="fishes" type="VARCHAR(max)" />
+            <column name="reasonofarrival" type="INT" defaultValue="-1"/>
+            <column name="creationdate" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="servertime" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="devicetime" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="fixtime" type="TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="valid" type="BOOLEAN" defaultValue="TRUE">
+                <constraints nullable="false" />
+            </column>
+            <column name="outdated" type="BOOLEAN" defaultValue="FALSE">
+                <constraints nullable="false" />
+            </column>
+            <column name="latitude" type="DOUBLE">
+                <constraints nullable="false" />
+            </column>
+            <column name="longitude" type="DOUBLE">
+                <constraints nullable="false" />
+            </column>
+            <column name="altitude" type="FLOAT">
+                <constraints nullable="false" />
+            </column>
+            <column name="speed" type="FLOAT">
+                <constraints nullable="false" />
+            </column>
+            <column name="course" type="FLOAT">
+                <constraints nullable="false" />
+            </column>
+            <column name="network" type="VARCHAR(4000)" />
+            <column name="geofenceids" type="VARCHAR(128)" />
+            <column name="attributes" type="VARCHAR(max)" />
+
+        </createTable>
+        <addForeignKeyConstraint baseTableName="elb_prior_notification" baseColumnNames="deviceid" constraintName="fk_elb_prior_notification_deviceid" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="tc_devices" />
+        <addForeignKeyConstraint baseTableName="elb_prior_notification" baseColumnNames="positionid" constraintName="fk_elb_prior_notification_positionid" onDelete="SET NULL" referencedColumnNames="id" referencedTableName="tc_positions" />
+
+        <createIndex tableName="elb_prior_notification" indexName="idx_elb_prior_notification_deviceid_positionid_fixtime">
+            <column name="id" />
+            <column name="deviceid" />
+            <column name="positionid" />
+            <column name="fixtime" />
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
