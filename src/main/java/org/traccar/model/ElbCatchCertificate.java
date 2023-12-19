@@ -38,6 +38,15 @@ public class ElbCatchCertificate extends ElbMessage {
         this.protocol = protocol;
     }
 
+    public long getInspectorId() {
+        return inspectorId;
+    }
+
+    public void setInspectorId(long inspectorId) {
+        this.inspectorId = inspectorId;
+    }
+
+    private long inspectorId;
     private String captainName;
     private String captainPhone;
     private String uniqueNumber;
