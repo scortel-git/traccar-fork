@@ -1,0 +1,7 @@
+#set($subject = "[Start Fishing Trip] - $device.name")
+<!DOCTYPE html>
+<html>
+<body>
+<h1>Риболовен рейс: TRP-BGR-$elbObject.tripNumber</h1>
+</body>
+</html>

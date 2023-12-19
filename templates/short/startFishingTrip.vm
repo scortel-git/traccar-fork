@@ -1,0 +1,3 @@
+#set($subject = "Start Fishing Trip")
+$device.name
+$elbObject.tripNumber
