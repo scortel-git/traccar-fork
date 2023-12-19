@@ -48,6 +48,7 @@
             <column name="inspectorverified" type="BOOLEAN" defaultValue="FALSE">
                 <constraints nullable="false" />
             </column>
+            <column name="inspectorid" type="BIGINT" />
             <column name="inspectorname" type="VARCHAR(512)" />
             <column name="inspectorcardid" type="VARCHAR(512)" />
             <column name="fishes" type="VARCHAR(max)" />
