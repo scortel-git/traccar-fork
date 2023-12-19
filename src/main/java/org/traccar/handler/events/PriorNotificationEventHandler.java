@@ -47,6 +47,9 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
     private Map<String, Object> eventAttributes = new HashMap<>();
 
+    private ElbMessageErrors errors = new ElbMessageErrors(getClass().toString());
+
+
 
     @Inject
     public PriorNotificationEventHandler(Config config, CacheManager cacheManager) {
@@ -63,48 +66,47 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             try {
                 handleEndFishingTripNotification(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_ELB_NOTIFICATION, e.toString());
+
             }
-
-
         } else if (alarm == Position.KEY_END_FISHING_TRIP) {
             try {
                 handleEndFishingTripNotification(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_END_FISHING_TRIP, e.toString());
+
             }
         } else if (alarm == Position.KEY_LANDING_DECLARATION) {
             try {
                 handleLandingDeclarationCertificate(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_LANDING_DECLARATION, e.toString());
+
             }
         } else if (alarm == Position.KEY_START_FISHING_TRIP) {
             try {
                 handleStartFishingTrip(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_START_FISHING_TRIP, e.toString());
+
             }
-
-
         } else if (alarm == Position.KEY_PRIOR_NOTIFICATION) {
             try {
                 handlePriorNotification(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_PRIOR_NOTIFICATION, e.toString());
             }
         } else if (alarm == Position.KEY_CATCH_CERTIFICATE) {
             try {
                 handleCatchCertificate(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_CATCH_CERTIFICATE, e.toString());
             }
         }else if (alarm == Position.KEY_PRIOR_NOTIFICATION_CANCELLATION) {
             try {
-//                position.setValid(false);
                 handlePriorNotification(position);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                errors.set(Position.KEY_PRIOR_NOTIFICATION_CANCELLATION, e.toString());
             }
         }
 
@@ -190,15 +192,15 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                     entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
                 } catch (Exception e) {
-                    int error = 5;
+                    errors.set("handleLandingDeclarationCertificate", e.toString());
                 } finally {
                     eventAttributes.put("messageId", entity.getId());
                     connectionManager.updateElbEntity(true, entity);
                 }
             }
 
-        } catch (Exception ignore) {
-            int i = 0;
+        } catch (Exception e) {
+            errors.set("handleLandingDeclarationCertificate", e.toString());
         } finally {
             connectionManager.updateElbEntity(true, entity);
         }
@@ -235,12 +237,13 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                     entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
                 } catch (Exception e) {
-                    int error = 3;
+                    errors.set("handleStartFishingTrip", e.toString());
                 }
             }
 
-        } catch (Exception ignore) {
-            int i = 0;
+        } catch (Exception e) {
+            errors.set("handleStartFishingTrip", e.toString());
+
         }
         finally {
             eventAttributes.put("messageId", entity.getId());
@@ -303,12 +306,11 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
             } else {
                 entity.setCaptainId(ElbUtil.getCaptainId(storage, device));
-                String trip = entity.getTripNumber();
                 try {
                     entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
                 } catch (Exception e) {
-                    int error = 0;
+                    errors.set("handleEndFishingTripNotification", e.toString());
                 } finally {
                     eventAttributes.put("messageId", entity.getId());
                     connectionManager.updateElbEntity(true, entity);
@@ -316,7 +318,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             }
 
         } catch (Exception e) {
-            int error = 1;
+            errors.set("handleEndFishingTripNotification", e.toString());
         }
     }
 
@@ -325,18 +327,31 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         int counter = 1;
         boolean isDuplicated = false;
         ElbCatchCertificate entity = (ElbCatchCertificate) position.getElbObject();
+        Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+        device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
+
+
         Driver captain = cacheManager.findDriverByUniqueId(position.getDeviceId(), entity.getCaptainPhone());
+        Driver inspector = ElbUtil.getDriverByUniqueId(storage, entity.getInspectorCardId());
+        List<Driver> crews = ElbUtil.getVesselCrew(storage, device);
+        long elbCatchCertificateCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
         if (captain != null) {
             entity.setCaptainId(captain.getId());
             attributes.put("captain", captain);
+        }
+        if (inspector != null) {
+            entity.setInspectorId(inspector.getId());
+            entity.setInspectorName(inspector.getName());
+            attributes.put("inspector", inspector);
+        }
+        if (!crews.isEmpty()) {
+            attributes.put("crew", crews);
+        }
+        if (!attributes.isEmpty()) {
             entity.setAttributes(attributes);
         }
 
-        entity.setDeviceId(position.getDeviceId());
         entity.setPositionId(position.getId());
-        Device device = cacheManager.getObject(Device.class, position.getDeviceId());
-        device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
-        long elbCatchCertificateCounts = ElbUtil.getCountElbMessages(storage, entity, device.getId());
         entity.setDeviceId(device.getId());
         try {
             List<ElbCatchCertificate> oldElbCatchCertificate = ElbUtil.getOldElbCatchCertificate(storage, entity.getTripNumber());
@@ -362,14 +377,11 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                                         : counter));
 
             }
-
-            entity.setCaptainId(ElbUtil.getCaptainId(storage, device));
-            String trip = entity.getTripNumber();
             try {
                 entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
             } catch (Exception e) {
-                int error = 0;
+                errors.set("handleCatchCertificate", e.toString());
             } finally {
                 if (isDuplicated) {
                     position.setValid(false);
@@ -382,7 +394,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
 
         } catch (Exception e) {
-            int error = 1;
+            errors.set("handleCatchCertificate", e.toString());
         }
     }
 
@@ -401,14 +413,22 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             position.setValid(false);
             position.set("duplicated", "true");
         } else {
+            Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+            device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
             Driver captain = cacheManager.findDriverByUniqueId(position.getDeviceId(), entity.getCaptainPhone());
+            List<Driver> crews = ElbUtil.getVesselCrew(storage, device);
             if (captain != null) {
                 entity.setCaptainId(captain.getId());
                 attributes.put("captain", captain);
             }
+            if (!crews.isEmpty()) {
+                attributes.put("crew", crews);
+            }
+            if (!attributes.isEmpty()) {
+                entity.setAttributes(attributes);
+            }
+
             entity.setPositionId(position.getId());
-            Device device = cacheManager.getObject(Device.class, position.getDeviceId());
-            device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
             entity.setDeviceId(device.getId());
             entity.setAttributes(attributes);
 
@@ -416,7 +436,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                 entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
                 eventAttributes.put("messageId", entity.getId());
             } catch (Exception e) {
-                int error = 0;
+                errors.set("handlePriorNotification", e.toString());
             } finally {
                 connectionManager.updateElbEntity(true, entity);
             }
