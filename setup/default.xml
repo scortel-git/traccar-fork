@@ -23,7 +23,7 @@
     <entry key='notificator.types'>web,mail,command</entry>
 
 <!--logger.queries -->
-    <entry key='logger.level'>info</entry>
+    <entry key='logger.level'>fine</entry>
     <entry key='logger.queries'>false</entry>
     <entry key='logger.file'>./logs/tracker-server.log</entry>
     <entry key='logger.rotate'>true</entry>

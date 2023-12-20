@@ -8,6 +8,11 @@
 
 
     <changeSet author="n.vlahovski" id="create_elb_prior_notification_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="elb_prior_notification"/>
+            </not>
+        </preConditions>
         <createTable tableName="elb_prior_notification">
             <column name="id" type="INT" autoIncrement="true">
                 <constraints primaryKey="true" />

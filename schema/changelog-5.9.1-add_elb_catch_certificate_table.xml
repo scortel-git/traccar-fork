@@ -8,6 +8,11 @@
 
 
     <changeSet author="n.vlahovski" id="create_catch_certificate_table">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="elb_catch_certificate"/>
+            </not>
+        </preConditions>
         <createTable tableName="elb_catch_certificate">
             <column name="id" type="INT" autoIncrement="true">
                 <constraints primaryKey="true" />
