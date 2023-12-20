@@ -3997,3 +3997,12 @@ of measurement from OECB</td>
 | Data        | n         | OECBDataRec | OECB Data                                 |
 | CRC         | 2         |             | Checksum (from Sequence to Data included) |
 | ETX         | 1         | 0x03        | End of transmission                       |
+
+
+pandoc -s -i index.html -t markdown |\
+grep -v "^:" |\
+grep -v '^```' |\
+grep -v '<!-- -->' |\
+sed -e ':again' -e N -e '$!b again' -e 's/{[^}]*}//g' \
+>! index.md
+
