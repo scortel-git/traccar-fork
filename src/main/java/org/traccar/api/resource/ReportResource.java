@@ -18,16 +18,8 @@ package org.traccar.api.resource;
 
 import org.traccar.api.SimpleObjectResource;
 import org.traccar.helper.LogAction;
-import org.traccar.model.Event;
-import org.traccar.model.Position;
-import org.traccar.model.Report;
-import org.traccar.model.UserRestrictions;
-import org.traccar.reports.CombinedReportProvider;
-import org.traccar.reports.EventsReportProvider;
-import org.traccar.reports.RouteReportProvider;
-import org.traccar.reports.StopsReportProvider;
-import org.traccar.reports.SummaryReportProvider;
-import org.traccar.reports.TripsReportProvider;
+import org.traccar.model.*;
+import org.traccar.reports.*;
 import org.traccar.reports.common.ReportExecutor;
 import org.traccar.reports.common.ReportMailer;
 import org.traccar.reports.model.CombinedReportItem;
@@ -80,6 +72,9 @@ public class ReportResource extends SimpleObjectResource<Report> {
     @Inject
     private ReportMailer reportMailer;
 
+    @Inject
+    private PriorNotificationReportProvider priorNotificationReportProvider;
+
     public ReportResource() {
         super(Report.class);
     }
@@ -111,6 +106,47 @@ public class ReportResource extends SimpleObjectResource<Report> {
         permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
         LogAction.logReport(getUserId(), "combined", from, to, deviceIds, groupIds);
         return combinedReportProvider.getObjects(getUserId(), deviceIds, groupIds, from, to);
+    }
+
+    @Path("prior")
+    @GET
+    public Collection<ElbPriorNotification> getPrior(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        LogAction.logReport(getUserId(), "prior", from, to, deviceIds, groupIds);
+        return priorNotificationReportProvider.getObjects(getUserId(), deviceIds, groupIds, from, to);
+    }
+
+    @Path("prior")
+    @GET
+    @Produces(EXCEL)
+    public Response getPriorExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @QueryParam("mail") boolean mail) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        return executeReport(getUserId(), mail, stream -> {
+            LogAction.logReport(getUserId(), "prior", from, to, deviceIds, groupIds);
+            priorNotificationReportProvider.getExcel(stream, getUserId(), deviceIds, groupIds, from, to);
+        });
+    }
+
+    @Path("prior/{type:xlsx|mail}")
+    @GET
+    @Produces(EXCEL)
+    public Response getPriorExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") final List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @PathParam("type") String type) throws StorageException {
+        int i = 0;
+        return getPriorExcel(deviceIds, groupIds, from, to, type.equals("mail"));
     }
 
     @Path("route")
