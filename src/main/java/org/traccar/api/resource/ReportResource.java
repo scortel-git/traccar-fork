@@ -75,6 +75,8 @@ public class ReportResource extends SimpleObjectResource<Report> {
     @Inject
     private PriorNotificationReportProvider priorNotificationReportProvider;
 
+    @Inject CatchCertificateReportProvider catchCertificateReportProvider;
+
     public ReportResource() {
         super(Report.class);
     }
@@ -91,6 +93,7 @@ public class ReportResource extends SimpleObjectResource<Report> {
                     throw new WebApplicationException(e);
                 }
             };
+
             return Response.ok(stream)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=report.xlsx").build();
         }
@@ -147,6 +150,48 @@ public class ReportResource extends SimpleObjectResource<Report> {
             @PathParam("type") String type) throws StorageException {
         int i = 0;
         return getPriorExcel(deviceIds, groupIds, from, to, type.equals("mail"));
+    }
+
+
+    @Path("catch-certificate")
+    @GET
+    public Collection<ElbCatchCertificate> getCatchCertificate(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        LogAction.logReport(getUserId(), "catch-certificate", from, to, deviceIds, groupIds);
+        return catchCertificateReportProvider.getObjects(getUserId(), deviceIds, groupIds, from, to);
+    }
+
+    @Path("catch-certificate")
+    @GET
+    @Produces(EXCEL)
+    public Response getCatchCertificateExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @QueryParam("mail") boolean mail) throws StorageException {
+        permissionsService.checkRestriction(getUserId(), UserRestrictions::getDisableReports);
+        return executeReport(getUserId(), mail, stream -> {
+            LogAction.logReport(getUserId(), "catch-certificate", from, to, deviceIds, groupIds);
+            catchCertificateReportProvider.getExcel(stream, getUserId(), deviceIds, groupIds, from, to);
+        });
+    }
+
+    @Path("catch-certificate/{type:xlsx|mail}")
+    @GET
+    @Produces(EXCEL)
+    public Response getCatchCertificateExcel(
+            @QueryParam("deviceId") List<Long> deviceIds,
+            @QueryParam("groupId") final List<Long> groupIds,
+            @QueryParam("from") Date from,
+            @QueryParam("to") Date to,
+            @PathParam("type") String type) throws StorageException {
+        int i = 0;
+        return getCatchCertificateExcel(deviceIds, groupIds, from, to, type.equals("mail"));
     }
 
     @Path("route")
