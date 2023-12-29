@@ -26,11 +26,11 @@ import org.traccar.Protocol;
 import org.traccar.helper.BitUtil;
 import org.traccar.model.*;
 import org.traccar.session.DeviceSession;
-import org.traccar.session.cache.CacheManager;
 import org.traccar.storage.Storage;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.*;
 import java.util.*;
 
 public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
@@ -222,7 +222,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
                         error = 3;
                     }
                     elbLandingDeclaration.setFishIds(fishesIds);
-                    elbLandingDeclaration.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+                    elbLandingDeclaration.setTime(getElbDateToUTC(buf.readIntLE()));
                     elbLandingDeclaration.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                     elbLandingDeclaration.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                     elbLandingDeclaration.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
@@ -385,7 +385,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
     private void setPositionToObject(ByteBuf buf, Position object) {
 
-        object.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        object.setTime(getElbDateToUTC(buf.readIntLE()));
         object.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         object.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         object.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
@@ -408,10 +408,10 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         certificate.setTripNumber(extractStringUniqueId(buf));
 
         certificate.setLandingPortId(buf.readShortLE());
-        certificate.setLandingTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setLandingTime(getElbDateToUTC(buf.readIntLE()));
 
         certificate.setDeparturePortId(buf.readShortLE());
-        certificate.setDepartureTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setDepartureTime(getElbDateToUTC(buf.readIntLE()));
 
         ElbPorts landingElbPort = ElbPorts.elbPortsHashMap.getOrDefault(certificate.getLandingPortId(), new ElbPorts());
         ElbPorts departureElbPort = ElbPorts.elbPortsHashMap.getOrDefault(certificate.getDeparturePortId(), new ElbPorts());
@@ -420,12 +420,12 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         certificate.setLandingPortCode(landingElbPort.getCode());
         certificate.setDeparturePortCode(departureElbPort.getCode());
         certificate.setFishingPermitNumber(extractStringUniqueId(buf));
-        certificate.setFishingPermitValidFrom(new Date((1514764800L + buf.readIntLE()) * 1000));
-        certificate.setFishingPermitValidTo(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setFishingPermitValidFrom(getElbDateToUTC(buf.readIntLE()));
+        certificate.setFishingPermitValidTo(getElbDateToUTC(buf.readIntLE()));
 
         certificate.setFishingCertificateNumber(extractStringUniqueId(buf));
-        certificate.setFishingCertificateValidFrom(new Date((1514764800L + buf.readIntLE()) * 1000));
-        certificate.setFishingCertificateValidTo(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setFishingCertificateValidFrom(getElbDateToUTC(buf.readIntLE()));
+        certificate.setFishingCertificateValidTo(getElbDateToUTC(buf.readIntLE()));
 
         int fisheryCatchesCount = buf.readByte();
 
@@ -443,7 +443,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         certificate.setInspectorName(extractStringUniqueId(buf));
         certificate.setInspectorCardId(extractStringUniqueId(buf));
 
-        certificate.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        certificate.setTime(getElbDateToUTC(buf.readIntLE()));
 
         return certificate;
     }
@@ -464,9 +464,9 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         priorNotification.setCaptainPhone(extractStringUniqueId(buf));
         priorNotification.setTripNumber(extractStringUniqueId(buf));
         priorNotification.setLandingPortId( buf.readShortLE());
-        priorNotification.setEstimatedTimeOfArrival(new Date((1514764800L + buf.readIntLE()) * 1000));
+        priorNotification.setEstimatedTimeOfArrival(getElbDateToUTC(buf.readIntLE()));
         priorNotification.setDeparturePortId(buf.readShortLE());
-        priorNotification.setDepartureTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        priorNotification.setDepartureTime(getElbDateToUTC(buf.readIntLE()));
         ElbPorts landingElbPort = ElbPorts.elbPortsHashMap.getOrDefault(priorNotification.getLandingPortId(), new ElbPorts());
         ElbPorts departureElbPort = ElbPorts.elbPortsHashMap.getOrDefault(priorNotification.getDeparturePortId(), new ElbPorts());
         landingElbPort.setPortId(priorNotification.getLandingPortId());
@@ -491,7 +491,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
         }
         priorNotification.setReasonOfArrival(buf.readByte());
-        priorNotification.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        priorNotification.setTime(getElbDateToUTC(buf.readIntLE()));
 
         return priorNotification;
     }
@@ -506,14 +506,14 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
         fisheryCatch.setIncludedDiscardedData(BitUtil.check(content, 3));
         fisheryCatch.setDataCorrection(BitUtil.check(content, 2));
-        fisheryCatch.setCreationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setCreationDateTime(getElbDateToUTC(buf.readIntLE()));
 
-        fisheryCatch.setStartFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setStartFishingOperationDateTime(getElbDateToUTC(buf.readIntLE()));
         fisheryCatch.setStartFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setStartFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setStartFishingOperationAltitude(0.00);
 
-        fisheryCatch.setEndFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setEndFishingOperationDateTime(getElbDateToUTC(buf.readIntLE()));
         fisheryCatch.setEndFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setEndFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setEndFishingOperationAltitude(0.00);
@@ -541,14 +541,14 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         fisheryCatch.setBelowRegularSize(BitUtil.check(content, 5));
         fisheryCatch.setIncludedDiscardedData(BitUtil.check(content, 3));
         fisheryCatch.setDataCorrection(BitUtil.check(content, 2));
-        fisheryCatch.setCreationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setCreationDateTime(getElbDateToUTC(buf.readIntLE()));
 
-        fisheryCatch.setStartFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setStartFishingOperationDateTime(getElbDateToUTC(buf.readIntLE()));
         fisheryCatch.setStartFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setStartFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setStartFishingOperationAltitude(0.00);
 
-        fisheryCatch.setEndFishingOperationDateTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+        fisheryCatch.setEndFishingOperationDateTime(getElbDateToUTC(buf.readIntLE()));
         fisheryCatch.setEndFishingOperationLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setEndFishingOperationLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
         fisheryCatch.setEndFishingOperationAltitude(0.00);
@@ -600,8 +600,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         elbSpecies.set("price", isSpeciesFullInformation ? buf.readFloatLE() : 0);
         elbSpecies.set("currency", isSpeciesFullInformation ? buf.readByte() : 0);
 
-        new Date((1514764800L + buf.readIntLE()) * 1000); // crDate1
-        Date crDate2 = isSpeciesDiscardedRecCrDt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+        getElbDateToUTC(buf.readIntLE()); // crDate1
+        Date crDate2 = isSpeciesDiscardedRecCrDt ? getElbDateToUTC(buf.readIntLE()) : null;
 
         elbSpecies.setPresentation(ElbSpeciesPresentation.getSpeciesPresentation(buf.readByte()).getCode().toUpperCase());
         elbSpecies.set("conditionSequenceNumber", buf.readByte());
@@ -614,8 +614,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         elbSpecies.set("speciesWeight", buf.readIntLE());
         elbSpecies.set("speciesWeightCount", buf.readShortLE());
 
-        Date speciesCrDate = new Date((1514764800L + buf.readIntLE()) * 1000);
-        Date DiscardedSpeciesCrDate = isDiscardedRecCrDisDiscardedRecCrDtt ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+        Date speciesCrDate = getElbDateToUTC(buf.readIntLE());
+        Date DiscardedSpeciesCrDate = isDiscardedRecCrDisDiscardedRecCrDtt ? getElbDateToUTC(buf.readIntLE()) : null;
 
         elbSpecies.set("speciesSizeGroup", buf.readByte());
         elbSpecies.set("qtCount", buf.readShortLE());
@@ -636,9 +636,9 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
             trip.setLandingPortId(elbPort.getPortId());
             trip.setLandingPortCode(elbPort.getCode());
 
-            trip.setEndFishingTripTime(new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000));
+            trip.setEndFishingTripTime(getElbDateToUTC(buf.readIntLE()));
             trip.setTime(
-                    new Date((trip.ADDITIONAL_SECONDS + buf.readIntLE()) * 1000)
+                    getElbDateToUTC(buf.readIntLE())
             );
 
             trip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
@@ -684,11 +684,11 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
             byte sftContent = buf.readByte();
             int timestamp = buf.readIntLE();
-            Date sftDate = new Date((1514764800L + timestamp) * 1000);
+            Date sftDate = getElbDateToUTC(buf.readIntLE());
             elbStartFishingTrip.setTime(sftDate);
 
             Date disRecCrDTL = BitUtil.check(sftContent, bit_pos_datacorrection) ?
-                    new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+                    getElbDateToUTC(buf.readIntLE()) : null;
 
             elbStartFishingTrip.set("disRecCrDTL", disRecCrDTL != null ? disRecCrDTL.toString() : null);
             short eftDeparturePortPortId = BitUtil.check(sftContent, PortId_bit_position) ? buf.readShortLE() : -1;
@@ -717,8 +717,8 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                 int fgCnt = BitUtil.check(fgContent, 4) ? buf.readShortLE() : null;
 
-                Date creationDTL = new Date((1514764800L + buf.readIntLE()) * 1000);
-                Date disRecCreationDTL = BitUtil.check(fgContent, 1) ? new Date((1514764800L + buf.readIntLE()) * 1000) : null;
+                Date creationDTL = getElbDateToUTC(buf.readIntLE());
+                Date disRecCreationDTL = BitUtil.check(fgContent, 1) ? getElbDateToUTC(buf.readIntLE()) : null;
 
 
                 fgCount--;
@@ -730,7 +730,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
             int statZone = BitUtil.check(sftContent, StatZone_bit_position) ? buf.readShortLE() : -1;
             elbStartFishingTrip.set("statZone", statZone);
             if (BitUtil.check(sftContent, Pos_bit_position)) {
-                elbStartFishingTrip.setTime(new Date((1514764800L + buf.readIntLE()) * 1000));
+                elbStartFishingTrip.setTime(getElbDateToUTC(buf.readIntLE()));
                 elbStartFishingTrip.setLatitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                 elbStartFishingTrip.setLongitude((buf.readIntLE() & 0xFFFFFFFFL) / 60000.0);
                 elbStartFishingTrip.setSpeed((double) (buf.readShortLE() & 0xFFFFL) / 10);
@@ -763,6 +763,19 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         }
         return null;
     }
+
+    private Date getElbDateToUTC(Integer timestamp) {
+        return Date.from(LocalDateTime.ofEpochSecond((1514764800L + timestamp),
+                0, ZoneOffset.of(
+                Long.toString(
+                        Duration.between(
+                                LocalDateTime.now(ZoneId.of("Europe/Sofia")),
+                                        LocalDateTime.now(ZoneId.of("UTC")))
+                                .toHours()
+                )
+        )).toInstant(ZoneOffset.UTC));
+    }
+
     @Override
     protected Object decode(Channel channel, SocketAddress remoteAddress, Object msg) throws Exception {
         List<Position> positions = new LinkedList<>();

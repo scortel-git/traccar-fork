@@ -47,7 +47,7 @@
             <column name="captainid" type="BIGINT" />
             <column name="captainname" type="VARCHAR(512)" />
             <column name="captainphone" type="VARCHAR(512)" />
-            <column name="fishes" type="VARCHAR(max)" />
+            <column name="fishes" type="TEXT" />
             <column name="reasonofarrival" type="INT" defaultValue="-1"/>
             <column name="creationdate" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
                 <constraints nullable="false" />
@@ -84,7 +84,7 @@
             </column>
             <column name="network" type="VARCHAR(4000)" />
             <column name="geofenceids" type="VARCHAR(128)" />
-            <column name="attributes" type="VARCHAR(max)" />
+            <column name="attributes" type="TEXT" />
 
         </createTable>
         <addForeignKeyConstraint baseTableName="elb_prior_notification" baseColumnNames="deviceid" constraintName="fk_elb_prior_notification_deviceid" onDelete="CASCADE" referencedColumnNames="id" referencedTableName="tc_devices" />

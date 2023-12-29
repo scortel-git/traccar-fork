@@ -30,6 +30,7 @@ import org.traccar.api.security.PermissionsService;
 import org.traccar.config.Config;
 import org.traccar.config.Keys;
 import org.traccar.geocoder.Geocoder;
+import org.traccar.helper.CoordinateConverterUtil;
 import org.traccar.helper.UnitsConverter;
 import org.traccar.helper.model.AttributeUtil;
 import org.traccar.helper.model.PositionUtil;
@@ -139,6 +140,9 @@ public class ReportUtils {
         var server = permissionsService.getServer();
         var user = permissionsService.getUser(userId);
         var context = PoiTransformer.createInitialContext();
+        CoordinateConverterUtil coordinateConverterUtil = new CoordinateConverterUtil();
+
+        context.putVar("coordinateFormatter", coordinateConverterUtil);
         context.putVar("distanceUnit", UserUtil.getDistanceUnit(server, user));
         context.putVar("speedUnit", UserUtil.getSpeedUnit(server, user));
         context.putVar("volumeUnit", UserUtil.getVolumeUnit(server, user));
