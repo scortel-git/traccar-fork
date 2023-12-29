@@ -204,8 +204,6 @@ public class OrbcommProtocolDecoder extends BaseProtocolDecoder {
 
                                 if (position.getString("duplicated", "false").equals("true")) {
                                     position.setOutdated(true);
-                                }else {
-                                    position.setProtocol("elbtest");
                                 }
                                 int u = 0;
 

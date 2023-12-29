@@ -24,6 +24,7 @@ import org.traccar.storage.query.Condition;
 import org.traccar.storage.query.Order;
 import org.traccar.storage.query.Request;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -63,11 +64,13 @@ public final class PriorNotificationUtil {
 
     public static List<ElbPriorNotification> getPriorNotifications(
             Storage storage, long deviceId, Date from, Date to) throws StorageException {
+        var conditions = new ArrayList<Condition>();
+        conditions.add(new Condition.And(
+                new Condition.Equals("deviceId", deviceId),
+                new Condition.Between("fixTime", "from", from, "to", to)));
+
         return storage.getObjects( ElbPriorNotification.class, new Request(
-                new Columns.All(),
-                new Condition.And(
-                        new Condition.Equals("deviceId", deviceId),
-                        new Condition.Between("fixTime", "from", from, "to", to)),
+                new Columns.All(), Condition.merge(conditions),
                 new Order("fixTime")));
     }
     public static List<ElbCatchCertificate> getCatchCertificate(

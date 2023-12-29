@@ -56,8 +56,8 @@
       <column name="tripnumber" type="VARCHAR(128)">
         <constraints nullable="false" />
       </column>
-      <column name="attributes" type="VARCHAR(1000000000)"/>
-      <column name="fishes" type="VARCHAR(1000000000)"/>
+      <column name="attributes" type="TEXT"/>
+      <column name="fishes" type="TEXT"/>
       <column name="network" type="VARCHAR(4000)"/>
       <column name="geofenceids" type="VARCHAR(4000)"/>
       <column name="fishids" type="VARCHAR(4000)"/>
