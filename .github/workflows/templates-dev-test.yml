@@ -1,0 +1,40 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    paths:
+      - 'templates/**'
+
+    branches: [ "tur-prior-notifiaction-1.0.0.5-development" ]
+    tags:
+      - v2
+      - v1.*
+  pull_request:
+    branches: [ "tur-prior-notifiaction-1.0.0.5-development" ]
+    tags:
+      - v2
+      - v1.*
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: krisi-dev
+    # Steps represent a sequence of tasks that will be executed as part of the job
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Deploy to the server directory
+        run:  |
+          cp -R templates/* ~/opt/traccar/templates/
+          rm -rf templates
