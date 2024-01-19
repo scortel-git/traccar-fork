@@ -54,12 +54,12 @@ public class ElbEndFishingTrip extends ElbMessage {
     public void setLandingPortId(long landingPortId) {
         this.landingPortId = landingPortId;
     }
-    private short departurePortId;
-    public short getDeparturePortId() {
+    private long departurePortId;
+    public long getDeparturePortId() {
         return departurePortId;
     }
 
-    public void setDeparturePortId(short departurePortId) {
+    public void setDeparturePortId(long departurePortId) {
         this.departurePortId = departurePortId;
     }
 

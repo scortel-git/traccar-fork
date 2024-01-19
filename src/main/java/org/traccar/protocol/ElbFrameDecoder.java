@@ -93,38 +93,9 @@ public class ElbFrameDecoder extends BaseFrameDecoder {
         }
         buf = removePreEscape(buf);
         if (buf.readableBytes() > 4) {
-            int inx = 0;
-            ByteBuf frame;
-            byte stx = buf.getByte(0); // STX
-            inx++;
-            byte seq = buf.getByte(1); // Sequence
-            inx++;
-            byte mask = buf.getByte(2);
-            inx++;
-            byte content = buf.getByte(3); // content
-            inx++;
-            switch (mask) {
-                case ElbBaseProtocolDecoder.MSG_END_FISHING_TRIP:
-                    frame = Unpooled.buffer(buf.readableBytes() * 2);
-                    break;
-                case ElbBaseProtocolDecoder.MSG_LANDING_DECLARATION:
-                    inx += content;
-                    additionalBufferSize =  buf.getByte(inx) * 500;
-                    frame = Unpooled.buffer(additionalBufferSize * 2 + buf.array().length);
-                    break;
-                case ElbBaseProtocolDecoder.MSG_START_FISHING_TRIP:
-                    inx += content;
-                    additionalBufferSize =  5000;
-                    frame = Unpooled.buffer(additionalBufferSize * 2 + buf.array().length);
-                    break;
-
-                default:
-                    frame = Unpooled.buffer();
-            }
+            ByteBuf frame = Unpooled.buffer();;
 
             frame.writeBytes(buf);
-
-//            TODO: Should increase buffer
             return frame;
         }
 

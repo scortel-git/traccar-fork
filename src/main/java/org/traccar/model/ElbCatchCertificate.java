@@ -38,6 +38,15 @@ public class ElbCatchCertificate extends ElbMessage {
         this.protocol = protocol;
     }
 
+    public long getInspectorId() {
+        return inspectorId;
+    }
+
+    public void setInspectorId(long inspectorId) {
+        this.inspectorId = inspectorId;
+    }
+
+    private long inspectorId;
     private String captainName;
     private String captainPhone;
     private String uniqueNumber;
@@ -53,8 +62,8 @@ public class ElbCatchCertificate extends ElbMessage {
     private Date fishingCertificateValidFrom;
     private Date fishingCertificateValidTo;
 
-    private short landingPortId;
-    private short departurePortId;
+    private long landingPortId;
+    private long departurePortId;
     private Date landingTime;
     private Date departureTime;
     private boolean outdated = false;
@@ -213,11 +222,11 @@ public class ElbCatchCertificate extends ElbMessage {
         this.captainPhone = captainPhone;
     }
 
-    public short getLandingPortId() {
+    public long getLandingPortId() {
         return landingPortId;
     }
 
-    public void setLandingPortId(short landingPortId) {
+    public void setLandingPortId(long landingPortId) {
         this.landingPortId = landingPortId;
         ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.landingPortId, new ElbPorts());
         elbPort.setPortId(landingPortId);
@@ -251,11 +260,11 @@ public class ElbCatchCertificate extends ElbMessage {
     }
 
 
-    public short getDeparturePortId() {
+    public long getDeparturePortId() {
         return departurePortId;
     }
 
-    public void setDeparturePortId(short departurePortId) {
+    public void setDeparturePortId(long departurePortId) {
         this.departurePortId = departurePortId;
         ElbPorts elbPort = ElbPorts.elbPortsHashMap.getOrDefault(this.departurePortId, new ElbPorts());
         elbPort.setPortId(departurePortId);

@@ -134,7 +134,9 @@ public final class SmtpMailManager implements MailManager {
 
         message.addRecipient(Message.RecipientType.TO,
                 new InternetAddress(user.getString("overwriteMail", user.getEmail())));
-        if (user.getManager() || user.getAdministrator()){
+        boolean manager = user.getManager();
+        boolean administrator = user.getAdministrator();
+        if (user.getManager() || user.getAdministrator()) {
             String mails = user.getString("mailCc", null);
             if (mails != null) {
                 message.addRecipients(Message.RecipientType.CC,

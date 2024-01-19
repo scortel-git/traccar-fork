@@ -235,15 +235,15 @@ public class ElbLandingDeclaration extends ElbMessage {
         this.course = course;
     }
 
-    public Long getElbPriorNotificationId() {
+    public long getElbPriorNotificationId() {
         return elbPriorNotificationId;
     }
 
-    public void setElbPriorNotificationId(Long elbPriorNotificationId) {
+    public void setElbPriorNotificationId(long elbPriorNotificationId) {
         this.elbPriorNotificationId = elbPriorNotificationId;
     }
 
-    private Long elbPriorNotificationId = -1L;
+    private long elbPriorNotificationId = -1L;
 
     @JsonIgnore
     @QueryIgnore

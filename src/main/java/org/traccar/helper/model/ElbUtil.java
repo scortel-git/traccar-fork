@@ -104,6 +104,11 @@ public final class ElbUtil {
                 )
         );
     }
+
+    public static Driver getDriverByUniqueId(Storage storage, String uniqueId) throws StorageException {
+        return storage.getObject(Driver.class, new Request(
+                new Columns.All(), new Condition.Equals("uniqueId", uniqueId)));
+    }
     public static List<ElbStartFishingTrip> getOldElbStartFishingTrips(Storage storage, String tripNumber) throws StorageException {
 
         return storage.getObjects(ElbStartFishingTrip.class,
@@ -266,6 +271,24 @@ public final class ElbUtil {
         }
 
         return 0;
+    }
+
+    public static List<Driver> getVesselCrew(Storage storage, Device device) throws StorageException {
+
+        List<Permission> permissions = storage.getPermissions(device.getClass(), Driver.class);
+        List<Driver> crews = new ArrayList<>();
+        for (Permission permission : permissions) {
+            if (permission.getOwnerId() == device.getId()) {
+                crews.add(storage.getObject(Driver.class, new Request(
+                        new Columns.All(), new Condition.Equals("id", permission.getPropertyId()))));
+            }
+
+        }
+        crews.removeIf(member -> !member.getBoolean("isCrewMember"));
+
+
+
+        return crews;
     }
 
     public static ElbEndFishingTrip lookupEndFishingTrip(Storage storage, String tripNumber) throws StorageException {

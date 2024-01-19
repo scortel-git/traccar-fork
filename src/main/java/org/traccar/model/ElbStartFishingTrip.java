@@ -213,12 +213,12 @@ public class ElbStartFishingTrip extends ElbMessage {
         this.course = course;
     }
 
-    private Short departurePortId;
-    public Short getDeparturePortId() {
+    private long departurePortId;
+    public long getDeparturePortId() {
         return this.departurePortId;
     }
 
-    public void setDeparturePortId(Short departurePortId) {
+    public void setDeparturePortId(long departurePortId) {
         this.departurePortId = departurePortId;
     }
 

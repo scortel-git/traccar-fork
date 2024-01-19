@@ -12,3 +12,6 @@ build
 .vscode
 bin
 debug-local.xml
+target
+setup
+setup_pn

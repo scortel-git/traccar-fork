@@ -39,8 +39,8 @@ public class ElbPriorNotification extends ElbMessage {
 
     private String captainName;
     private String captainPhone;
-    private short landingPortId;
-    private short departurePortId;
+    private long landingPortId;
+    private long departurePortId;
     private String landingPortCode;
     private String departurePortCode;
     private Date estimatedTimeOfArrival;
@@ -90,19 +90,19 @@ public class ElbPriorNotification extends ElbMessage {
         this.captainPhone = captainPhone;
     }
 
-    public short getLandingPortId() {
+    public long getLandingPortId() {
         return landingPortId;
     }
 
-    public void setLandingPortId(short landingPortId) {
+    public void setLandingPortId(long landingPortId) {
         this.landingPortId = landingPortId;
     }
 
-    public short getDeparturePortId() {
+    public long getDeparturePortId() {
         return departurePortId;
     }
 
-    public void setDeparturePortId(short departurePortId) {
+    public void setDeparturePortId(long departurePortId) {
         this.departurePortId = departurePortId;
     }
 

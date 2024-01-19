@@ -36,15 +36,15 @@ public class ElbSpeciesExtended extends ExtendedModel {
     public String getPresentation() {
         return presentation;
     }
-    public short getSequence() {
+    public long getSequence() {
         return sequence;
     }
 
-    public void setSequence(short sequence) {
+    public void setSequence(long sequence) {
         this.sequence = sequence;
     }
 
-    public short sequence;
+    public long sequence;
 
 
     public void setElbSpeciesExtended(short sequence) {
