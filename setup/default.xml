@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+
+<!DOCTYPE properties SYSTEM 'http://java.sun.com/dtd/properties.dtd'>
+
+<properties>
+    <entry key='web.port'>1914</entry>
+    <entry key='web.path'>./modern</entry>
+    <entry key='web.sanitize'>false</entry>
+    <entry key='web.persistSession'>false</entry>
+    <entry key='web.console'>false</entry>
+    <entry key='geocoder.enable'>false</entry>
+    <entry key='geocoder.type'>locationiq</entry>
+    <entry key='geocoder.key'>pk.689d849289c8c63708068b2ff1f63b2d</entry>
+    <entry key='geocoder.onRequest'>false</entry>
+    <entry key='geocoder.ignorePositions'>true</entry>
+    <entry key='notificator.types'>web,mail,command</entry>
+
+    <!--logger.queries -->
+    <entry key='logger.level'>info</entry>
+    <entry key='logger.queries'>false</entry>
+    <entry key='logger.file'>./logs/system-server.log</entry>
+    <entry key='logger.rotate'>true</entry>
+
+    <!--    <entry key='filter.enable'>false</entry>-->
+    <!--    <entry key='filter.future'>86400</entry>-->
+
+    <entry key='event.ignoreDuplicateAlerts'>true</entry>
+
+    <entry key='media.path'>./media</entry>
+
+    <entry key='commands.queueing'>true</entry>
+
+    <entry key='database.changelog'>./schema/changelog-master.xml</entry>
+
+
+
+</properties>
