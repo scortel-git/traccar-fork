@@ -1,0 +1,16 @@
+[Unit]
+Description=eafa-pn-system
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/eafa-pn-system
+ExecStart=/opt/eafa-pn-system/jre/bin/java -jar tracker-server.jar conf/eafa-pn-system.xml
+SyslogIdentifier=eafa-pn-system
+SuccessExitStatus=143
+WatchdogSec=600
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
