@@ -424,6 +424,8 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             } catch (Exception e) {
                 errors.set("handleCatchCertificate", e.toString());
             }
+        }else {
+            position.setValid(false);
         }
 
     }
@@ -496,8 +498,8 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                 }
 
             }
-
-
+        }else {
+            position.setValid(false);
         }
     }
 }
