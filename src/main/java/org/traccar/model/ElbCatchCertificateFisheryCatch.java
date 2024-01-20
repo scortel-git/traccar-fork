@@ -149,10 +149,16 @@ public class ElbCatchCertificateFisheryCatch extends ExtendedModel {
         return speciesId;
     }
 
-    public void setSpeciesId(int speciesId) {
-        this.speciesId = speciesId;
-    }
+    public void setSpeciesId(short speciesId) {
 
+        this.speciesId = speciesId;
+        ElbSpeciesExtended elbSpecies = new ElbSpeciesExtended();
+        elbSpecies.setElbSpeciesExtended(speciesId);
+        setSpeciesCode(elbSpecies.getCode());
+        setSpeciesNameBG(elbSpecies.getNameBG());
+        setSpeciesNameGB(elbSpecies.getNameGB());
+
+    }
     public int getSpeciesPresentationId() {
         return speciesPresentationId;
     }
@@ -230,6 +236,33 @@ public class ElbCatchCertificateFisheryCatch extends ExtendedModel {
     public void setEndFishingOperationDateTime(Date endFishingOperationDateTime) {
         this.endFishingOperationDateTime = endFishingOperationDateTime;
     }
+    public String getSpeciesCode() {
+        return speciesCode;
+    }
+
+    public void setSpeciesCode(String speciesCode) {
+        this.speciesCode = speciesCode;
+    }
+
+    public String getSpeciesNameBG() {
+        return speciesNameBG;
+    }
+
+    public void setSpeciesNameBG(String speciesNameBG) {
+        this.speciesNameBG = speciesNameBG;
+    }
+
+    public String getSpeciesNameGB() {
+        return speciesNameGB;
+    }
+
+    public void setSpeciesNameGB(String speciesNameGB) {
+        this.speciesNameGB = speciesNameGB;
+    }
+
+    private String speciesCode;
+    private String speciesNameBG;
+    private String speciesNameGB;
     private boolean isAdditionalCatch;
     private boolean isBelowRegularSize;
     private boolean isIncludedDiscardedData;
