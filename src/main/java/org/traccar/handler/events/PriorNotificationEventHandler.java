@@ -467,6 +467,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             }
             if (isDuplicated) {
                 position.setValid(false);
+
                 position.set("duplicated", "true");
             } else {
                 Device device = cacheManager.getObject(Device.class, position.getDeviceId());
