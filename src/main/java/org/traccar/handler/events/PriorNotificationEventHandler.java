@@ -526,6 +526,8 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             } finally {
                 connectionManager.updateElbEntity(true, entity);
             }
+        }else {
+            position.setValid(false);
         }
 
     }
