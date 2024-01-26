@@ -51,7 +51,6 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
     private ElbMessageErrors errors = new ElbMessageErrors(getClass().toString());
 
 
-
     @Inject
     public PriorNotificationEventHandler(Config config, CacheManager cacheManager) {
         this.cacheManager = cacheManager;
@@ -103,9 +102,9 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             } catch (Exception e) {
                 errors.set(Position.KEY_CATCH_CERTIFICATE, e.toString());
             }
-        }else if (alarm == Position.KEY_PRIOR_NOTIFICATION_CANCELLATION) {
+        } else if (alarm == Position.KEY_PRIOR_NOTIFICATION_CANCELLATION) {
             try {
-                handlePriorNotification(position);
+                handlePriorNotificationCancellation(position);
             } catch (Exception e) {
                 errors.set(Position.KEY_PRIOR_NOTIFICATION_CANCELLATION, e.toString());
             }
@@ -245,8 +244,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         } catch (Exception e) {
             errors.set("handleStartFishingTrip", e.toString());
 
-        }
-        finally {
+        } finally {
             eventAttributes.put("messageId", entity.getId());
             connectionManager.updateElbEntity(true, entity);
         }
@@ -332,7 +330,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         String fishesStr = (String) serverAttributes.get("speciesCodesForCertification");
         if (fishesStr != null) {
             allowedFishes = Arrays.asList(fishesStr.toLowerCase().split(","));
-        }else {
+        } else {
             objectMatch = true;
         }
 
@@ -424,7 +422,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
             } catch (Exception e) {
                 errors.set("handleCatchCertificate", e.toString());
             }
-        }else {
+        } else {
             position.setValid(false);
         }
 
@@ -439,7 +437,7 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         String fishesStr = (String) serverAttributes.get("speciesCodesForNotification");
         if (fishesStr != null) {
             allowedFishes = Arrays.asList(fishesStr.toLowerCase().split(","));
-        }else {
+        } else {
             objectMatch = true;
         }
         Map<String, Object> attributes = new HashMap<>();
@@ -499,8 +497,38 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
                 }
 
             }
-        }else {
+        } else {
             position.setValid(false);
+        }
+    }
+
+    private void handlePriorNotificationCancellation(Position position) throws StorageException {
+
+
+        ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
+
+
+        List<ElbPriorNotification> oldElbPriorNotifications = ElbUtil.getOldElbPriorNotification(storage, entity.getTripNumber());
+        ElbPriorNotification elbPriorNotificationOld = null;
+        if (!oldElbPriorNotifications.isEmpty()) {
+            for (ElbPriorNotification elbPriorNotification: oldElbPriorNotifications) {
+                if (!elbPriorNotification.getOutdated()) {
+                    elbPriorNotificationOld = elbPriorNotification;
+                    elbPriorNotification.setOutdated(true);
+                }
+            }
+
+            try {
+                ElbUtil.updateElbMessages(storage, oldElbPriorNotifications);
+                if (elbPriorNotificationOld != null) {
+                    entity.setId(elbPriorNotificationOld.getId());
+                }
+                eventAttributes.put("messageId", entity.getId());
+            } catch (Exception e) {
+                errors.set("handlePriorNotification", e.toString());
+            } finally {
+                connectionManager.updateElbEntity(true, entity);
+            }
         }
     }
 }
