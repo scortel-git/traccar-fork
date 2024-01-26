@@ -510,7 +510,9 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         try {
             oldEntity.setOutdated(true);
             ElbUtil.updateElbMessage(storage, oldEntity);
-            entity.setId(oldEntity.getId());
+            entity.setProtocol("priorNotificationCancellation");
+            entity.set("cancelledId", oldEntity.getId());
+            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
             eventAttributes.put("messageId", entity.getId());
         } catch (Exception e) {
