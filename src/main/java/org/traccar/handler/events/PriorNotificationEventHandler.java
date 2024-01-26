@@ -504,31 +504,19 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
     private void handlePriorNotificationCancellation(Position position) throws StorageException {
 
-
         ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
+        ElbPriorNotification oldEntity = ElbUtil.lookupElbPriorNotification(storage, entity.getTripNumber());
 
-
-        List<ElbPriorNotification> oldElbPriorNotifications = ElbUtil.getOldElbPriorNotification(storage, entity.getTripNumber());
-        ElbPriorNotification elbPriorNotificationOld = null;
-        if (!oldElbPriorNotifications.isEmpty()) {
-            for (ElbPriorNotification elbPriorNotification: oldElbPriorNotifications) {
-                if (!elbPriorNotification.getOutdated()) {
-                    elbPriorNotificationOld = elbPriorNotification;
-                    elbPriorNotification.setOutdated(true);
-                }
+        try {
+            ElbUtil.updateElbMessage(storage, oldEntity);
+            if (oldEntity != null) {
+                entity.setId(oldEntity.getId());
             }
-
-            try {
-                ElbUtil.updateElbMessages(storage, oldElbPriorNotifications);
-                if (elbPriorNotificationOld != null) {
-                    entity.setId(elbPriorNotificationOld.getId());
-                }
-                eventAttributes.put("messageId", entity.getId());
-            } catch (Exception e) {
-                errors.set("handlePriorNotification", e.toString());
-            } finally {
-                connectionManager.updateElbEntity(true, entity);
-            }
+            eventAttributes.put("messageId", entity.getId());
+        } catch (Exception e) {
+            errors.set("handlePriorNotification", e.toString());
+        } finally {
+            connectionManager.updateElbEntity(true, entity);
         }
     }
 }

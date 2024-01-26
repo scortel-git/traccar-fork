@@ -195,6 +195,13 @@ public final class ElbUtil {
         }
     }
 
+    public static <T> void updateElbMessage(Storage storage, ElbMessage elbMessage) throws StorageException {
+            storage.updateObject(elbMessage, new Request(
+                    new Columns.Exclude("id"),
+                    new Condition.Equals("id", ((ElbMessage) elbMessage).getId())));
+
+    }
+
     public static ElbEndFishingTrip handlePreviousEndFishingTrips(Storage storage, List<ElbEndFishingTrip> oldElbEndFishingTrips, ElbEndFishingTrip entity) throws StorageException {
         List<ElbMessage> elbMessages = new ArrayList<>();
         for (ElbEndFishingTrip previous : oldElbEndFishingTrips) {
