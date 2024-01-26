@@ -508,10 +508,10 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         ElbPriorNotification oldEntity = ElbUtil.lookupElbPriorNotification(storage, entity.getTripNumber());
 
         try {
+            oldEntity.setOutdated(true);
             ElbUtil.updateElbMessage(storage, oldEntity);
-            if (oldEntity != null) {
-                entity.setId(oldEntity.getId());
-            }
+            entity.setId(oldEntity.getId());
+
             eventAttributes.put("messageId", entity.getId());
         } catch (Exception e) {
             errors.set("handlePriorNotification", e.toString());
