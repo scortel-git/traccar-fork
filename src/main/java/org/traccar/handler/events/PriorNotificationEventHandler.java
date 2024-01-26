@@ -507,19 +507,27 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
         ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
         ElbPriorNotification oldEntity = ElbUtil.lookupElbPriorNotification(storage, entity.getTripNumber());
 
-        try {
-            oldEntity.setOutdated(true);
-            ElbUtil.updateElbMessage(storage, oldEntity);
-            entity.setProtocol("priorNotificationCancellation");
-            entity.set("cancelledId", oldEntity.getId());
-            entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
+        if (oldEntity != null) {
+            Device device = cacheManager.getObject(Device.class, position.getDeviceId());
+            device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
+            try {
+                oldEntity.setOutdated(true);
+                ElbUtil.updateElbMessage(storage, oldEntity);
+                entity.setPositionId(position.getId());
+                entity.setIsCancellation(true);
+                entity.setDeviceId(device.getId());
+                entity.setProtocol("priorNotificationCancellation");
+                entity.set("cancelledId", oldEntity.getId());
+                entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
 
-            eventAttributes.put("messageId", entity.getId());
-        } catch (Exception e) {
-            errors.set("handlePriorNotification", e.toString());
-        } finally {
-            connectionManager.updateElbEntity(true, entity);
+                eventAttributes.put("messageId", entity.getId());
+            } catch (Exception e) {
+                errors.set("handlePriorNotification", e.toString());
+            } finally {
+                connectionManager.updateElbEntity(true, entity);
+            }
         }
+
     }
 }
 

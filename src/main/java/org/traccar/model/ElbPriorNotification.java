@@ -260,19 +260,17 @@ public class ElbPriorNotification extends ElbMessage {
         this.departurePortCountry = departurePortCountry;
     }
 
-    public boolean isCancellation() {
+    public boolean getIsCancellation() {
         return isCancellation;
     }
 
-    public void setCancellation(boolean cancellation) {
-        isCancellation = cancellation;
+    public void setIsCancellation(boolean cancellation) {
+        this.isCancellation = cancellation;
     }
 
-    @QueryIgnore
     public boolean getOutdated() {
         return outdated;
     }
-    @QueryIgnore
     public void setOutdated(boolean outdated) {
         this.outdated = outdated;
     }

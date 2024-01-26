@@ -357,7 +357,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
 
                 position.setElbObject(priorNotification);
                 position.setValid(true);
-                position.set(Position.KEY_EVENT, !priorNotification.isCancellation() ? Position.KEY_PRIOR_NOTIFICATION : Position.KEY_PRIOR_NOTIFICATION_CANCELLATION);
+                position.set(Position.KEY_EVENT, !priorNotification.getIsCancellation() ? Position.KEY_PRIOR_NOTIFICATION : Position.KEY_PRIOR_NOTIFICATION_CANCELLATION);
 
 
                 break;
@@ -460,7 +460,7 @@ public class ElbBaseProtocolDecoder extends BaseProtocolDecoder {
         var catches = new LinkedList<ElbPriorNotificationFisheryCatch>();
         byte content = buf.readByte();
 
-        priorNotification.setCancellation(BitUtil.check(content, 0));
+        priorNotification.setIsCancellation(BitUtil.check(content, 0));
         extractStringUniqueId(buf); // deviceUniqueId
         priorNotification.setCaptainName(extractStringUniqueId(buf));
         priorNotification.setCaptainPhone(extractStringUniqueId(buf));
