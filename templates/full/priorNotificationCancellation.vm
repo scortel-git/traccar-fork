@@ -1,9 +1,17 @@
-#set($subject = "[PN-Cancellation] - $device.name")
-#set($captainName = $elbObject.captainName)
+#set($subject = "[PN-Cancellation] - $device.name: TRP-BGR-$elbObject.tripNumber ")
 <!DOCTYPE html>
 <html>
 <body>
-<h1>Риболовен рейс: TRP-BGR-$elbObject.tripNumber</h1>
-<H1>Капитан $captainName на кораб $device.name безотговорно отказа предишното уведомление!!!</H1>
+ОТМЯНА на Предварително уведомление за разтоварване на калкан към риболовен рейс TRP-BGR-$elbObject.tripNumber<br>
+<br>
+Риболовен кораб: #{if}($device.name)$device.name#{else}-#{end}<br>
+Външна Маркировка: #{if}($device.attributes.ext)$device.attributes.ext#{else}-#{end}<br>
+CFR Код: #{if}($device.attributes.cfr)$device.attributes.cfr#{else}-#{end}<br>
+<br>
+Капитан/упълномощено лице: #{if}($driver.name)$driver.name#{else}-#{end}<br>
+Телефон: #{if}($driver.attributes.captainPhone)$driver.attributes.captainPhone#{else}-#{end}<br>
+Имейл: #{if}($driver.attributes.captainEmail)$driver.attributes.captainEmail#{else}-#{end}<br>
+<br>
+<a href="$webUrl/documents/prior-notification/$elbObject.id?token=$token">Подробен преглед и принтиране на документ [ОТМЕНЕН]</a><br>
 </body>
 </html>
