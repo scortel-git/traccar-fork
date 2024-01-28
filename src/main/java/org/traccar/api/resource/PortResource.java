@@ -50,5 +50,25 @@ public class PortResource extends BaseObjectResource<ElbPorts> {
 
         }
     }
+    @Path("codes")
+    @GET
+    public Collection<ElbPorts> getByCodes(
+            @QueryParam("code") List<String> portCodes) throws StorageException {
+        List<ElbPorts> result = new LinkedList<>();
+
+        if (!portCodes.isEmpty()) {
+            Collection<ElbPorts> ports = ElbPorts.elbPortsHashMap.values();
+            for (String code : portCodes) {
+                for (ElbPorts port : ports) {
+                    if (code.equalsIgnoreCase(port.getCode())) {
+                        result.add(port);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
 
 }
