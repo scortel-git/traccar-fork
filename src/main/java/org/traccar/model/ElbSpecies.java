@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.HashMap;
 public class ElbSpecies extends ExtendedModel {
     @JsonIgnore
-    private static final HashMap<Short, ElbSpecies> elbSpecies = new HashMap<Short, ElbSpecies>() {{
+    public static final HashMap<Short, ElbSpecies> elbSpecies = new HashMap<Short, ElbSpecies>() {{
         put((short) 1, new ElbSpecies() {{ setCode("TRS"); setType(1); setNameBG("Речна (балканска) пъстърва"); setNameGB("Brown trout"); }});
         put((short) 2, new ElbSpecies() {{ setCode("TRR"); setType(1); setNameBG("Дъгова пъстърва"); setNameGB("Rainbow trout"); }});
         put((short) 3, new ElbSpecies() {{ setCode("SVF"); setType(1); setNameBG("Сивен"); setNameGB("Brook trout"); }});
