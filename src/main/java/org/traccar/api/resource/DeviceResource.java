@@ -73,7 +73,8 @@ public class DeviceResource extends BaseObjectResource<Device> {
 
     @GET
     public Collection<Device> get(
-            @QueryParam("all") boolean all, @QueryParam("userId") long userId,
+            @QueryParam("all") boolean all,
+            @QueryParam("userId") long userId,
             @QueryParam("uniqueId") List<String> uniqueIds,
             @QueryParam("id") List<Long> deviceIds) throws StorageException {
 
