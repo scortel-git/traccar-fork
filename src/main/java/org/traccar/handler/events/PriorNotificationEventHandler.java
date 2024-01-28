@@ -506,16 +506,30 @@ public class PriorNotificationEventHandler extends BaseEventHandler {
 
         ElbPriorNotification entity = (ElbPriorNotification) position.getElbObject();
         ElbPriorNotification oldEntity = ElbUtil.lookupElbPriorNotification(storage, entity.getTripNumber());
-
+        Map<String, Object> attributes = new HashMap<>();
         if (oldEntity != null) {
             Device device = cacheManager.getObject(Device.class, position.getDeviceId());
             device = device == null ? ElbUtil.getDeviceByIdStorage(storage, position.getDeviceId()) : device;
+            Driver captain = cacheManager.findDriverByUniqueId(position.getDeviceId(), entity.getCaptainPhone());
+            List<Driver> crews = ElbUtil.getVesselCrew(storage, device);
+            if (captain != null) {
+                entity.setCaptainId(captain.getId());
+                attributes.put("captain", captain);
+            }
+            if (!crews.isEmpty()) {
+                attributes.put("crew", crews);
+            }
+            if (!attributes.isEmpty()) {
+                entity.setAttributes(attributes);
+            }
+
+            entity.setPositionId(position.getId());
+            entity.setDeviceId(device.getId());
+            entity.setAttributes(attributes);
             try {
                 oldEntity.setOutdated(true);
                 ElbUtil.updateElbMessage(storage, oldEntity);
-                entity.setPositionId(position.getId());
                 entity.setIsCancellation(true);
-                entity.setDeviceId(device.getId());
                 entity.setProtocol("priorNotificationCancellation");
                 entity.set("cancelledId", oldEntity.getId());
                 entity.setId(storage.addObject(entity, new Request(new Columns.Exclude("id"))));
