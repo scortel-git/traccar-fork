@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 package org.traccar.model;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.HashMap;
 
