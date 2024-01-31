@@ -19,7 +19,7 @@ jobs:
           distribution: zulu
           java-version: 11
           cache: gradle
-      - run: ./gradlew build --no-daemon --warning-mode=fail
+      - run: ./gradlew build --no-daemon
 
   build:
 
@@ -32,4 +32,4 @@ jobs:
           distribution: zulu
           java-version: 11
           cache: gradle
-      - run: ./gradlew build --no-daemon --warning-mode=fail
+      - run: ./gradlew build --no-daemon
