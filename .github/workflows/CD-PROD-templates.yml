@@ -19,5 +19,5 @@ jobs:
         env:
           SERVER_DIR: ${{ secrets.SERVER_DIR }}  # Използване на Secret за сървърната директория
         run: |
-          cp -R templates/* $SERVER_DIR
+          sudo cp -R templates/* $SERVER_DIR
           rm -rf templates
