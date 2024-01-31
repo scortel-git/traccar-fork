@@ -1,5 +1,5 @@
 [submodule "eafa-pn-web"]
 	path = eafa-pn-web
-	url = ../eafa-pn-web.git
+	url = git@github.com:scortel-git/eafa-pn-web.git
 	branch = production
 	ignore = all
