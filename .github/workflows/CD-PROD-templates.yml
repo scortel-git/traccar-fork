@@ -1,0 +1,23 @@
+name: Deploy EAFA-PN Template Workflow
+
+on:
+  push:
+    paths:
+      - 'templates/**'
+    branches:
+      - '*'  # Това позволява тригер при push във всеки бранш
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: eafa-pn
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Deploy to the server directory
+        env:
+          SERVER_DIR: ${{ secrets.SERVER_DIR }}  # Използване на Secret за сървърната директория
+        run: |
+          cp -R templates/* $SERVER_DIR
+          rm -rf templates
