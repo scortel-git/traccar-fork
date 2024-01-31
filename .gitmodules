@@ -1,5 +1,5 @@
-[submodule "traccar-web"]
-	path = traccar-web
-	url = ../traccar-web.git
-	branch = master
+[submodule "eafa-pn-web"]
+	path = eafa-pn-web
+	url = ../eafa-pn-web.git
+	branch = production
 	ignore = all
