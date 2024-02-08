@@ -25,8 +25,8 @@
 Външна Маркировка: #{if}($device.attributes.ext)$device.attributes.ext#{else}-#{end}<br>
 CFR Код: #{if}($device.attributes.cfr)$device.attributes.cfr#{else}-#{end}<br>
 <br>
-Капитан/упълномощено лице: #{if}($driver.name)$driver.name#{else}-#{end}<br>
-Телефон: #{if}($driver.attributes.captainPhone)$driver.attributes.captainPhone#{else}-#{end}<br>
+Капитан/упълномощено лице: #{if}($driver.name)$driver.name#{else}#{if}($elbObject.captainName)$elbObject.captainName#{else}-#{end}#{end}<br>
+Телефон: #{if}($driver.attributes.captainPhone)$driver.attributes.captainPhone#{else}#{if}($elbObject.captainPhone)$elbObject.captainPhone#{else}-#{end}#{end}<br>
 Имейл: #{if}($driver.attributes.captainEmail)$driver.attributes.captainEmail#{else}-#{end}<br>
 <br>
 Време на отпътуване: #{if}($elbObject.departureTime)$dateTool.format('yyyy-MM-dd HH:mm:ss', $elbObject.departureTime, $locale, $timezone)#{else}-#{end}<br>
